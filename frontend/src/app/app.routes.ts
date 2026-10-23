@@ -39,6 +39,29 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'] },
         loadComponent: () =>
           import('./features/configuracion/configuracion.component').then((m) => m.ConfiguracionComponent),
+        children: [
+          {
+            path: 'tarifas',
+            loadComponent: () =>
+              import('./features/configuracion/tarifas/tarifas.component').then((m) => m.TarifasComponent),
+          },
+          {
+            path: 'horarios',
+            loadComponent: () =>
+              import('./features/configuracion/horarios/horarios.component').then((m) => m.HorariosComponent),
+          },
+          {
+            path: 'usuarios',
+            loadComponent: () =>
+              import('./features/configuracion/usuarios/usuarios.component').then((m) => m.UsuariosComponent),
+          },
+          {
+            path: 'parqueadero',
+            loadComponent: () =>
+              import('./features/configuracion/parqueadero/parqueadero.component').then((m) => m.ParqueaderoComponent),
+          },
+          { path: '', pathMatch: 'full', redirectTo: 'tarifas' },
+        ],
       },
       // Al entrar a la raíz, cada rol va a su pantalla de inicio
       { path: '', pathMatch: 'full', redirectTo: () => inject(AuthService).rutaInicio() },

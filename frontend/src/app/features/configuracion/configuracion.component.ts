@@ -1,29 +1,24 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
-import { ApiService } from '../../core/api.service';
-import { pesos } from '../../core/formato';
-import { Horario, Parqueadero, Tarifa } from '../../core/models';
-
-/** Pantalla solo para el administrador. En el avance 1 muestra la configuración actual. */
+/** Contenedor de la configuración (solo administrador): pestañas con una ruta hija cada una. */
 @Component({
   selector: 'app-configuracion',
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './configuracion.component.html',
+  styles: `
+    .pestanas { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--linea); overflow-x: auto; }
+    .pestanas a { padding: 10px 16px; font-size: 0.9rem; color: var(--texto-suave); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+    .pestanas a:hover { color: var(--negro); }
+    .pestanas a.activa { color: var(--negro); font-weight: 600; border-bottom-color: var(--amarillo); }
+    .pestanas i { margin-right: 6px; }
+  `,
 })
-export class ConfiguracionComponent implements OnInit {
-  private api = inject(ApiService);
-
-  protected parqueadero = signal<Parqueadero | null>(null);
-  protected tarifas = signal<Tarifa[]>([]);
-  protected horarios = signal<Horario[]>([]);
-  protected pesos = pesos;
-
-  ngOnInit(): void {
-    this.api.parqueadero().subscribe((p) => this.parqueadero.set(p));
-    this.api.tarifas().subscribe((t) => this.tarifas.set(t));
-    this.api.horarios().subscribe((h) => this.horarios.set(h));
-  }
-
-  hora(valor: string): string {
-    return valor.slice(0, 5);
-  }
+export class ConfiguracionComponent {
+  protected pestanas = [
+    { ruta: 'tarifas', texto: 'Tarifas', icono: 'fa-tags' },
+    { ruta: 'horarios', texto: 'Horarios', icono: 'fa-clock' },
+    { ruta: 'usuarios', texto: 'Usuarios', icono: 'fa-users' },
+    { ruta: 'parqueadero', texto: 'Parqueadero', icono: 'fa-building' },
+  ];
 }

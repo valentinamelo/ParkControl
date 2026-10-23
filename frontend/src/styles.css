@@ -78,3 +78,19 @@ tr:last-child td { border: 0; }
   .grid-2 { grid-template-columns: 1fr; }
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Avance 2: formularios de administración */
+.error { color: var(--error); font-size: 0.8rem; }
+.input.invalido { border-color: var(--error); }
+.campos-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.acciones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.acciones-fila { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; }
+.exito { padding: 10px 14px; border-radius: var(--radio); font-size: 0.875rem; margin-bottom: 16px; background: #fff8d6; color: var(--negro); }
+.btn-peligro { background: var(--blanco); border-color: #f0c9c4; color: var(--error); }
+.btn-peligro:hover:not(:disabled) { border-color: var(--error); }
+tr.inactivo td { color: var(--texto-suave); }
+
+@media (max-width: 600px) {
+  .campos-2 { grid-template-columns: 1fr; }
+}

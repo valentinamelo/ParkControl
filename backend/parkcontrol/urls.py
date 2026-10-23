@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from apps.configuracion.views import HorarioViewSet, TarifaViewSet, TipoVehiculoViewSet, parqueadero
 from apps.espacios.views import EspacioViewSet, ZonaViewSet
-from apps.usuarios.views import LoginView, me
+from apps.usuarios.views import LoginView, UsuarioViewSet, me
 from apps.vehiculos.views import VehiculoViewSet
 
 router = DefaultRouter()
@@ -15,6 +15,7 @@ router.register("horarios", HorarioViewSet, basename="horario")
 router.register("zonas", ZonaViewSet, basename="zona")
 router.register("espacios", EspacioViewSet, basename="espacio")
 router.register("vehiculos", VehiculoViewSet, basename="vehiculo")
+router.register("usuarios", UsuarioViewSet, basename="usuario")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
