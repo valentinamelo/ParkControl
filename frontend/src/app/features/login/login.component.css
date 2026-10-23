@@ -1,0 +1,7 @@
+.pantalla { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.login { width: 100%; max-width: 400px; padding: 36px; }
+.marca { text-align: center; margin-bottom: 28px; }
+.marca i { color: var(--amarillo); background: var(--negro); padding: 12px; border-radius: 10px; margin-bottom: 12px; font-size: 1.3rem; }
+.marca p { color: var(--texto-suave); font-size: 0.875rem; }
+.error { color: var(--error); font-size: 0.8rem; }
+.btn-bloque { margin-top: 8px; }

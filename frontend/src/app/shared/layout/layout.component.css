@@ -1,0 +1,38 @@
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 240px; flex: none; background: var(--negro); color: var(--blanco);
+  padding: 28px 16px; display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+}
+.logo { font-size: 1.2rem; font-weight: 700; padding: 0 12px 32px; }
+.logo i { color: var(--amarillo); margin-right: 8px; }
+
+nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+.enlace {
+  display: flex; align-items: center; gap: 12px; padding: 11px 12px;
+  border-radius: var(--radio); color: #bbb; font-size: 0.9rem;
+  background: none; border: 0; font-family: inherit; cursor: pointer; text-align: left;
+}
+.enlace:hover { background: #1e1e1e; color: var(--blanco); }
+.enlace.activo { background: var(--amarillo); color: var(--negro); font-weight: 600; }
+.enlace i { width: 18px; text-align: center; }
+
+.usuario { padding: 12px; margin-bottom: 4px; border-top: 1px solid #222; display: flex; flex-direction: column; }
+.usuario b { font-size: 0.85rem; }
+.usuario span { font-size: 0.78rem; color: var(--amarillo); }
+
+main { flex: 1; padding: 36px 40px; min-width: 0; }
+
+@media (max-width: 1024px) {
+  .sidebar { width: 200px; }
+  main { padding: 28px 24px; }
+}
+@media (max-width: 768px) {
+  .app { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; padding: 12px; overflow-x: auto; }
+  .logo { padding: 0 12px; }
+  nav { flex-direction: row; flex: none; }
+  .usuario { display: none; }
+}
