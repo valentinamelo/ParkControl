@@ -117,6 +117,8 @@ class Command(BaseCommand):
                 espacio.estado = Espacio.Estado.OCUPADO
                 espacio.save()
 
+        if options["verbosity"] == 0:
+            return
         self.stdout.write(self.style.SUCCESS("Datos iniciales cargados."))
         self.stdout.write("  Administrador: admin@parkcontrol.com / Admin123*")
         self.stdout.write("  Trabajador:    trabajador@parkcontrol.com / Trabajador123*")
