@@ -1,0 +1,49 @@
+<header class="encabezado">
+  <div>
+    <h1>Configuración</h1>
+    <p>{{ parqueadero()?.nombre }} · {{ parqueadero()?.direccion }}</p>
+  </div>
+  <span class="badge">Solo administrador</span>
+</header>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Tarifas vigentes</h2>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr><th>Tipo</th><th>Modalidad</th><th>Valor</th><th>Gracia</th><th>Tope diario</th></tr>
+        </thead>
+        <tbody>
+          @for (t of tarifas(); track t.id) {
+            <tr>
+              <td><b>{{ t.tipo_vehiculo_nombre }}</b></td>
+              <td>{{ t.modalidad_display }}</td>
+              <td>{{ pesos(t.valor) }} / {{ t.minutos_fraccion }} min</td>
+              <td>{{ t.minutos_gracia }} min</td>
+              <td>{{ pesos(t.tope_diario) }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="vacio">Sin tarifas configuradas.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Horario de atención</h2>
+    <table>
+      <tbody>
+        @for (h of horarios(); track h.id) {
+          <tr>
+            <td>{{ h.dia }}</td>
+            <td>{{ h.abierto ? hora(h.hora_apertura) + ' – ' + hora(h.hora_cierre) : 'Cerrado' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<p class="nota" style="margin-top: 20px">La edición de tarifas, horarios, espacios y usuarios se habilita en el avance 2.</p>

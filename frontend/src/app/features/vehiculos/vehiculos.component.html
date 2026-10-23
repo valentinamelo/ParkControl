@@ -1,0 +1,39 @@
+<header class="encabezado">
+  <h1>Vehículos</h1>
+  <!-- Registrar, editar y eliminar vehículos llega en el avance 2 -->
+  <button class="btn btn-primario" type="button" disabled title="Disponible en el avance 2">
+    <i class="fa-solid fa-plus"></i>Registrar vehículo
+  </button>
+</header>
+
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+
+<div class="card">
+  <div class="buscador">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input class="input" placeholder="Buscar por placa…" (input)="buscar($any($event.target).value)" />
+  </div>
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr><th>Placa</th><th>Tipo</th><th>Marca</th><th>Modelo</th><th>Color</th><th>Propietario</th></tr>
+      </thead>
+      <tbody>
+        @for (v of vehiculos(); track v.id) {
+          <tr>
+            <td><b>{{ v.placa }}</b></td>
+            <td>{{ v.tipo_vehiculo_nombre }}</td>
+            <td>{{ v.marca || '—' }}</td>
+            <td>{{ v.modelo || '—' }}</td>
+            <td>{{ v.color || '—' }}</td>
+            <td>{{ v.cliente_nombre ?? '—' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="vacio">{{ cargando() ? 'Cargando…' : 'No se encontraron vehículos.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

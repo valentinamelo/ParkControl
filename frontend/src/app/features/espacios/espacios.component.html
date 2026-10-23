@@ -1,0 +1,58 @@
+<header class="encabezado">
+  <h1>Espacios del parqueadero</h1>
+  @if (auth.esAdmin()) {
+    <!-- Crear, editar y desactivar espacios llega en el avance 2 -->
+    <button class="btn btn-oscuro" type="button" disabled title="Disponible en el avance 2">
+      <i class="fa-solid fa-gear"></i>Administrar espacios
+    </button>
+  }
+</header>
+
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+
+<div class="leyenda">
+  <span><i class="punto ocupado"></i>Ocupado</span>
+  <span><i class="punto"></i>Disponible</span>
+  <span><i class="punto inactivo"></i>Inactivo</span>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    @for (grupo of zonas(); track grupo.zona) {
+      <h2>Zona {{ grupo.zona }} <span class="nota">· {{ grupo.tipo }}</span></h2>
+      <div class="mapa">
+        @for (e of grupo.espacios; track e.id) {
+          <button
+            type="button"
+            class="celda"
+            [class.ocupado]="e.estado === 'OCUPADO'"
+            [class.inactivo]="e.estado === 'INACTIVO'"
+            [class.seleccionado]="seleccionado()?.id === e.id"
+            (click)="seleccionar(e)"
+          >
+            {{ e.codigo }}
+          </button>
+        }
+      </div>
+    } @empty {
+      <p class="nota">Cargando espacios…</p>
+    }
+  </section>
+
+  <section class="card detalle">
+    <h2>Detalle del espacio</h2>
+    @if (seleccionado(); as e) {
+      <p><span>Número</span><b>{{ e.codigo }}</b></p>
+      <p><span>Zona</span><b>{{ e.zona_nombre }} ({{ e.tipo_vehiculo }})</b></p>
+      <p><span>Estado</span><b>{{ e.estado_display }}</b></p>
+      <p><span>Vehículo</span><b>{{ e.ocupante?.placa ?? '—' }}</b></p>
+      <p><span>Hora de entrada</span><b>{{ e.ocupante ? (e.ocupante.fecha_entrada | date: 'hh:mm a') : '—' }}</b></p>
+      <p><span>Tiempo</span><b>{{ e.ocupante ? duracion(e.ocupante.minutos) : '—' }}</b></p>
+      <p><span>Tiquete</span><b>{{ e.ocupante?.tiquete ?? '—' }}</b></p>
+    } @else {
+      <p class="nota">Selecciona un espacio para ver su información.</p>
+    }
+  </section>
+</div>

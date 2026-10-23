@@ -1,0 +1,49 @@
+<header class="encabezado">
+  <div>
+    <h1>Movimientos</h1>
+    <p>{{ total() }} vehículos dentro · {{ disponibles() }} espacios disponibles</p>
+  </div>
+  <div class="fila">
+    <!-- El registro de entrada y salida con tiquete se construye en el avance 3 -->
+    <button class="btn btn-primario" type="button" disabled title="Disponible en el avance 3">
+      <i class="fa-solid fa-plus"></i>Registrar entrada
+    </button>
+    <button class="btn btn-oscuro" type="button" disabled title="Disponible en el avance 3">
+      <i class="fa-solid fa-barcode"></i>Registrar salida
+    </button>
+  </div>
+</header>
+
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+
+<div class="card">
+  <div class="encabezado" style="margin-bottom: 8px">
+    <h2 style="margin: 0">Vehículos actualmente dentro</h2>
+    <button class="btn btn-borde btn-sm" type="button" (click)="cargar()">
+      <i class="fa-solid fa-rotate"></i>Actualizar
+    </button>
+  </div>
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr><th>Tiquete</th><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th>Tiempo</th></tr>
+      </thead>
+      <tbody>
+        @for (e of ocupados(); track e.id) {
+          <tr>
+            <td>{{ e.ocupante?.tiquete }}</td>
+            <td><b>{{ e.ocupante?.placa }}</b></td>
+            <td>{{ e.ocupante?.tipo_vehiculo }}</td>
+            <td>{{ e.codigo }}</td>
+            <td>{{ e.ocupante?.fecha_entrada | date: 'hh:mm a' }}</td>
+            <td><span class="badge">{{ duracion(e.ocupante?.minutos ?? 0) }}</span></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="vacio">{{ cargando() ? 'Cargando…' : 'No hay vehículos dentro.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<header class="encabezado">
+  <h1>Dashboard</h1>
+</header>
+
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+
+<div class="grid-4">
+  <app-stat-card icono="fa-square-parking" [valor]="activos().length" etiqueta="Espacios totales" />
+  <app-stat-card icono="fa-car-side" [valor]="ocupados().length" etiqueta="Espacios ocupados" />
+  <app-stat-card icono="fa-circle-check" [valor]="disponibles().length" etiqueta="Espacios disponibles" />
+  <app-stat-card icono="fa-car" [valor]="totalVehiculos()" etiqueta="Vehículos registrados" />
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Vehículos actualmente dentro</h2>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Hora de entrada</th><th>Tiempo</th></tr>
+        </thead>
+        <tbody>
+          @for (e of ocupados(); track e.id) {
+            <tr>
+              <td><b>{{ e.ocupante?.placa }}</b></td>
+              <td>{{ e.ocupante?.tipo_vehiculo }}</td>
+              <td>{{ e.codigo }}</td>
+              <td>{{ e.ocupante?.fecha_entrada | date: 'hh:mm a' }}</td>
+              <td><span class="badge">{{ duracion(e.ocupante?.minutos ?? 0) }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="vacio">{{ cargando() ? 'Cargando…' : 'No hay vehículos dentro.' }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Acciones rápidas</h2>
+    <div class="columna">
+      <a class="btn btn-primario" routerLink="/movimientos"><i class="fa-solid fa-right-left"></i>Ir a movimientos</a>
+      <a class="btn btn-borde" routerLink="/espacios">Ver espacios</a>
+    </div>
+  </section>
+</div>
