@@ -147,6 +147,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "EXCEPTION_HANDLER": "parkcontrol.excepciones.manejar_excepciones",
 }
 
 SIMPLE_JWT = {
