@@ -1,0 +1,94 @@
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+@if (aviso()) {
+  <div class="exito">{{ aviso() }}</div>
+}
+
+<section class="card">
+  <div class="encabezado" style="margin-bottom: 8px">
+    <h2 style="margin: 0">Usuarios</h2>
+    <button class="btn btn-primario btn-sm" type="button" (click)="abrirFormulario()">
+      <i class="fa-solid fa-user-plus"></i>Nuevo usuario
+    </button>
+  </div>
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (u of usuarios(); track u.id) {
+          <tr [class.inactivo]="!u.is_active">
+            <td><b>{{ u.nombre || '—' }}</b>@if (esYo(u)) { <span class="nota"> (tú)</span> }</td>
+            <td>{{ u.email }}</td>
+            <td><span class="badge" [class.badge-claro]="u.rol !== 'ADMIN'">{{ u.rol_display }}</span></td>
+            <td>{{ u.is_active ? 'Activo' : 'Inactivo' }}</td>
+            <td>
+              <div class="acciones-fila">
+                <button class="btn btn-borde btn-sm" type="button" (click)="abrirFormulario(u)" [attr.aria-label]="'Editar ' + u.email">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                @if (!esYo(u)) {
+                  <button class="btn btn-sm" type="button" [class.btn-peligro]="u.is_active" [class.btn-borde]="!u.is_active" (click)="cambiarEstado(u)">
+                    {{ u.is_active ? 'Desactivar' : 'Activar' }}
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="vacio">{{ cargando() ? 'Cargando…' : 'No hay usuarios.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@if (modalAbierto()) {
+  <app-modal [titulo]="editando() ? 'Editar usuario' : 'Nuevo usuario'" (cerrar)="modalAbierto.set(false)">
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      @if (errorForm()) {
+        <div class="alerta">{{ errorForm() }}</div>
+      }
+      <div class="campos-2">
+        <div class="campo">
+          <label for="nombre">Nombre</label>
+          <input class="input" id="nombre" formControlName="first_name" [class.invalido]="errorDe('first_name')" />
+          @if (errorDe('first_name')) { <small class="error">{{ errorDe('first_name') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="apellido">Apellido</label>
+          <input class="input" id="apellido" formControlName="last_name" />
+        </div>
+      </div>
+      <div class="campo">
+        <label for="correo">Correo electrónico</label>
+        <input class="input" id="correo" type="email" formControlName="email" autocomplete="off" [class.invalido]="errorDe('email')" />
+        @if (errorDe('email')) { <small class="error">{{ errorDe('email') }}</small> }
+      </div>
+      <div class="campos-2">
+        <div class="campo">
+          <label for="rol">Rol</label>
+          <select class="input" id="rol" formControlName="rol">
+            <option value="TRABAJADOR">Trabajador</option>
+            <option value="ADMIN">Administrador</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="clave">{{ editando() ? 'Nueva contraseña' : 'Contraseña' }}</label>
+          <input class="input" id="clave" type="password" formControlName="password" autocomplete="new-password"
+                 [placeholder]="editando() ? 'Dejar vacía para no cambiarla' : ''" [class.invalido]="errorDe('password')" />
+          @if (errorDe('password')) { <small class="error">{{ errorDe('password') }}</small> }
+        </div>
+      </div>
+      <p class="nota" style="margin-bottom: 12px">Mínimo 8 caracteres, que no sea solo números ni muy común.</p>
+      <div class="acciones">
+        <button class="btn btn-borde" type="button" (click)="modalAbierto.set(false)">Cancelar</button>
+        <button class="btn btn-primario" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}

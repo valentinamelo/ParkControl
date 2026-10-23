@@ -22,3 +22,7 @@ h2 + .mapa { margin-bottom: 24px; }
 .detalle p:last-child { border: 0; }
 .detalle p span { color: var(--texto-suave); }
 .detalle p.nota { display: block; border: 0; }
+.lateral { gap: 24px; }
+.detalle .acciones { margin-top: 16px; }
+.lateral td { padding: 8px 6px; }
+.lateral select.input { padding: 6px 8px; }

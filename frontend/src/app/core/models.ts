@@ -60,6 +60,7 @@ export interface Tarifa {
   minutos_gracia: number;
   tope_diario: string | null;
   vigente: boolean;
+  creada: string;
 }
 
 export interface Horario {
@@ -77,4 +78,27 @@ export interface Parqueadero {
   nit: string;
   direccion: string;
   telefono: string;
+}
+
+export interface TipoVehiculo {
+  id: number;
+  nombre: string;
+}
+
+export interface Zona {
+  id: number;
+  nombre: string;
+  tipo_vehiculo: number;
+  tipo_vehiculo_nombre: string;
+  total_espacios: number;
+}
+
+/** Datos que el administrador envía al crear o editar un usuario. */
+export interface UsuarioForm {
+  email: string;
+  first_name: string;
+  last_name: string;
+  rol: Rol;
+  is_active?: boolean;
+  password?: string;
 }

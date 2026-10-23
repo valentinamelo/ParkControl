@@ -1,15 +1,17 @@
 <header class="encabezado">
   <h1>Espacios del parqueadero</h1>
   @if (auth.esAdmin()) {
-    <!-- Crear, editar y desactivar espacios llega en el avance 2 -->
-    <button class="btn btn-oscuro" type="button" disabled title="Disponible en el avance 2">
-      <i class="fa-solid fa-gear"></i>Administrar espacios
+    <button class="btn btn-oscuro" type="button" (click)="abrirLote()">
+      <i class="fa-solid fa-plus"></i>Agregar espacios
     </button>
   }
 </header>
 
 @if (error()) {
   <div class="alerta">{{ error() }}</div>
+}
+@if (aviso()) {
+  <div class="exito">{{ aviso() }}</div>
 }
 
 <div class="leyenda">
@@ -37,22 +39,136 @@
         }
       </div>
     } @empty {
-      <p class="nota">Cargando espacios…</p>
+      <p class="nota">{{ error() ? 'No hay espacios para mostrar.' : 'Cargando espacios…' }}</p>
     }
   </section>
 
-  <section class="card detalle">
-    <h2>Detalle del espacio</h2>
-    @if (seleccionado(); as e) {
-      <p><span>Número</span><b>{{ e.codigo }}</b></p>
-      <p><span>Zona</span><b>{{ e.zona_nombre }} ({{ e.tipo_vehiculo }})</b></p>
-      <p><span>Estado</span><b>{{ e.estado_display }}</b></p>
-      <p><span>Vehículo</span><b>{{ e.ocupante?.placa ?? '—' }}</b></p>
-      <p><span>Hora de entrada</span><b>{{ e.ocupante ? (e.ocupante.fecha_entrada | date: 'hh:mm a') : '—' }}</b></p>
-      <p><span>Tiempo</span><b>{{ e.ocupante ? duracion(e.ocupante.minutos) : '—' }}</b></p>
-      <p><span>Tiquete</span><b>{{ e.ocupante?.tiquete ?? '—' }}</b></p>
-    } @else {
-      <p class="nota">Selecciona un espacio para ver su información.</p>
+  <div class="columna lateral">
+    <section class="card detalle">
+      <h2>Detalle del espacio</h2>
+      @if (seleccionado(); as e) {
+        <p><span>Número</span><b>{{ e.codigo }}</b></p>
+        <p><span>Zona</span><b>{{ e.zona_nombre }} ({{ e.tipo_vehiculo }})</b></p>
+        <p><span>Estado</span><b>{{ e.estado_display }}</b></p>
+        <p><span>Vehículo</span><b>{{ e.ocupante?.placa ?? '—' }}</b></p>
+        <p><span>Hora de entrada</span><b>{{ e.ocupante ? (e.ocupante.fecha_entrada | date: 'hh:mm a') : '—' }}</b></p>
+        <p><span>Tiempo</span><b>{{ e.ocupante ? duracion(e.ocupante.minutos) : '—' }}</b></p>
+        <p><span>Tiquete</span><b>{{ e.ocupante?.tiquete ?? '—' }}</b></p>
+
+        @if (auth.esAdmin()) {
+          @if (e.estado === 'OCUPADO') {
+            <p class="nota">Un espacio ocupado no se puede desactivar ni eliminar.</p>
+          } @else {
+            <div class="acciones">
+              <button class="btn btn-peligro btn-sm" type="button" (click)="eliminar(e)">
+                <i class="fa-solid fa-trash"></i>Eliminar
+              </button>
+              <button class="btn btn-borde btn-sm" type="button" (click)="cambiarEstado(e)">
+                <i class="fa-solid" [class.fa-ban]="e.estado !== 'INACTIVO'" [class.fa-check]="e.estado === 'INACTIVO'"></i>
+                {{ e.estado === 'INACTIVO' ? 'Activar' : 'Desactivar' }}
+              </button>
+            </div>
+          }
+        }
+      } @else {
+        <p class="nota">Selecciona un espacio para ver su información.</p>
+      }
+    </section>
+
+    @if (auth.esAdmin()) {
+      <section class="card">
+        <h2>Zonas</h2>
+        <table>
+          <thead>
+            <tr><th>Zona</th><th>Tipo de vehículo</th><th>Espacios</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (z of listaZonas(); track z.id) {
+              <tr>
+                <td><b>{{ z.nombre }}</b></td>
+                <td>
+                  <select class="input" [attr.aria-label]="'Tipo de vehículo de la zona ' + z.nombre" (change)="cambiarTipoZona(z, $any($event.target).value)">
+                    @for (t of tipos(); track t.id) {
+                      <option [value]="t.id" [selected]="t.id === z.tipo_vehiculo">{{ t.nombre }}</option>
+                    }
+                  </select>
+                </td>
+                <td>{{ z.total_espacios }}</td>
+                <td>
+                  @if (z.total_espacios === 0) {
+                    <button class="btn btn-peligro btn-sm" type="button" (click)="eliminarZona(z)" [attr.aria-label]="'Eliminar zona ' + z.nombre">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <p class="nota" style="margin-top: 12px">Cada espacio admite el tipo de vehículo de su zona.</p>
+      </section>
     }
-  </section>
+  </div>
 </div>
+
+@if (modalLote()) {
+  <app-modal titulo="Agregar espacios" (cerrar)="modalLote.set(false)">
+    <form [formGroup]="formLote" (ngSubmit)="crearLote()">
+      @if (errorLote()) {
+        <div class="alerta">{{ errorLote() }}</div>
+      }
+      <div class="campos-2">
+        <div class="campo">
+          <label for="zona">Zona</label>
+          <input class="input" id="zona" formControlName="zona" placeholder="B" list="zonas-existentes"
+                 [class.invalido]="formLote.controls.zona.touched && formLote.controls.zona.invalid" />
+          <datalist id="zonas-existentes">
+            @for (z of listaZonas(); track z.id) {
+              <option [value]="z.nombre"></option>
+            }
+          </datalist>
+          @if (formLote.controls.zona.touched && formLote.controls.zona.invalid) {
+            <small class="error">Escribe el nombre de la zona (letras o números).</small>
+          } @else if (erroresLote()['zona']) {
+            <small class="error">{{ erroresLote()['zona'] }}</small>
+          }
+        </div>
+        <div class="campo">
+          <label for="cantidad">Cantidad</label>
+          <input class="input" id="cantidad" type="number" min="1" max="100" formControlName="cantidad"
+                 [class.invalido]="formLote.controls.cantidad.touched && formLote.controls.cantidad.invalid" />
+          @if (formLote.controls.cantidad.touched && formLote.controls.cantidad.invalid) {
+            <small class="error">Entre 1 y 100 espacios.</small>
+          } @else if (erroresLote()['cantidad']) {
+            <small class="error">{{ erroresLote()['cantidad'] }}</small>
+          }
+        </div>
+      </div>
+
+      @if (zonaExistente(); as z) {
+        <p class="nota" style="margin-bottom: 16px">
+          La zona {{ z.nombre }} ya existe ({{ z.tipo_vehiculo_nombre }}, {{ z.total_espacios }} espacios). Los nuevos continúan la numeración.
+        </p>
+      } @else {
+        <div class="campo">
+          <label for="tipo">Tipo de vehículo de la zona nueva</label>
+          <select class="input" id="tipo" formControlName="tipo_vehiculo">
+            @for (t of tipos(); track t.id) {
+              <option [ngValue]="t.id">{{ t.nombre }}</option>
+            }
+          </select>
+          @if (erroresLote()['tipo_vehiculo']) {
+            <small class="error">{{ erroresLote()['tipo_vehiculo'] }}</small>
+          }
+        </div>
+      }
+
+      <div class="acciones">
+        <button class="btn btn-borde" type="button" (click)="modalLote.set(false)">Cancelar</button>
+        <button class="btn btn-primario" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Creando…' : 'Crear espacios' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}

@@ -1,0 +1,155 @@
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+@if (aviso()) {
+  <div class="exito">{{ aviso() }}</div>
+}
+
+<div class="grid-2">
+  <section class="card">
+    <div class="encabezado" style="margin-bottom: 8px">
+      <h2 style="margin: 0">Tarifas vigentes</h2>
+      <label class="check">
+        <input type="checkbox" [checked]="historial() !== null" (change)="verHistorial($any($event.target).checked)" />
+        Ver historial
+      </label>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr><th>Tipo</th><th>Modalidad</th><th>Valor</th><th>Gracia</th><th>Tope diario</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (t of tarifas(); track t.id) {
+            <tr>
+              <td><b>{{ t.tipo_vehiculo_nombre }}</b></td>
+              <td>{{ t.modalidad_display }}</td>
+              <td>{{ pesos(t.valor) }} / {{ t.minutos_fraccion }} min</td>
+              <td>{{ t.minutos_gracia }} min</td>
+              <td>{{ t.tope_diario ? pesos(t.tope_diario) : 'Sin tope' }}</td>
+              <td>
+                <button class="btn btn-borde btn-sm" type="button" (click)="abrirFormulario(t)">
+                  <i class="fa-solid fa-pen"></i>Cambiar
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="vacio">Sin tarifas configuradas.</td></tr>
+          }
+          @for (tipo of tiposSinTarifa(); track tipo.id) {
+            <tr>
+              <td><b>{{ tipo.nombre }}</b></td>
+              <td colspan="4" class="nota">Sin tarifa: no se podrá cobrar a este tipo de vehículo.</td>
+              <td>
+                <button class="btn btn-primario btn-sm" type="button" (click)="abrirFormulario(null, tipo.id)">
+                  <i class="fa-solid fa-plus"></i>Crear
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (historial(); as anteriores) {
+      <h2 style="margin-top: 28px">Historial</h2>
+      <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr><th>Desde</th><th>Tipo</th><th>Modalidad</th><th>Valor</th><th>Gracia</th><th>Tope diario</th></tr>
+          </thead>
+          <tbody>
+            @for (t of anteriores; track t.id) {
+              <tr class="inactivo">
+                <td>{{ t.creada | date: 'dd/MM/yyyy hh:mm a' }}</td>
+                <td>{{ t.tipo_vehiculo_nombre }}</td>
+                <td>{{ t.modalidad_display }}</td>
+                <td>{{ pesos(t.valor) }} / {{ t.minutos_fraccion }} min</td>
+                <td>{{ t.minutos_gracia }} min</td>
+                <td>{{ t.tope_diario ? pesos(t.tope_diario) : 'Sin tope' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="vacio">Todavía no hay tarifas anteriores.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="card">
+    <h2>Tipos de vehículo</h2>
+    <table>
+      <tbody>
+        @for (t of tipos(); track t.id) {
+          <tr>
+            <td>{{ t.nombre }}</td>
+            <td>
+              <div class="acciones-fila">
+                <button class="btn btn-peligro btn-sm" type="button" (click)="eliminarTipo(t)" [attr.aria-label]="'Eliminar ' + t.nombre">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <form class="fila" style="margin-top: 16px; flex-wrap: nowrap" [formGroup]="formTipo" (ngSubmit)="crearTipo()">
+      <input class="input" placeholder="Nuevo tipo" aria-label="Nuevo tipo de vehículo" formControlName="nombre" />
+      <button class="btn btn-oscuro" type="submit" [disabled]="formTipo.invalid">Agregar</button>
+    </form>
+    <p class="nota" style="margin-top: 12px">Un tipo en uso por zonas, vehículos o tarifas no se puede eliminar.</p>
+  </section>
+</div>
+
+@if (modalAbierto()) {
+  <app-modal
+    [titulo]="editando() ? 'Cambiar tarifa de ' + editando()!.tipo_vehiculo_nombre : 'Nueva tarifa de ' + nombreTipo(form.controls.tipo_vehiculo.value)"
+    (cerrar)="modalAbierto.set(false)"
+  >
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      @if (errorForm()) {
+        <div class="alerta">{{ errorForm() }}</div>
+      }
+      @if (editando()) {
+        <p class="nota" style="margin-bottom: 16px">Se crea una tarifa nueva; los tiquetes ya cobrados conservan su valor.</p>
+      }
+      <div class="campos-2">
+        <div class="campo">
+          <label for="modalidad">Modalidad</label>
+          <select class="input" id="modalidad" formControlName="modalidad">
+            <option value="HORA">Por hora</option>
+            <option value="FRACCION">Por fracción</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="fraccion">Minutos por fracción</label>
+          <input class="input" id="fraccion" type="number" min="1" formControlName="minutos_fraccion" [class.invalido]="errorDe('minutos_fraccion')" />
+          @if (errorDe('minutos_fraccion')) { <small class="error">{{ errorDe('minutos_fraccion') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="valor">Valor por {{ form.controls.modalidad.value === 'HORA' ? 'hora' : 'fracción' }} ($)</label>
+          <input class="input" id="valor" type="number" min="1" step="100" formControlName="valor" [class.invalido]="errorDe('valor')" />
+          @if (errorDe('valor')) { <small class="error">{{ errorDe('valor') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="gracia">Minutos de gracia</label>
+          <input class="input" id="gracia" type="number" min="0" formControlName="minutos_gracia" [class.invalido]="errorDe('minutos_gracia')" />
+          @if (errorDe('minutos_gracia')) { <small class="error">{{ errorDe('minutos_gracia') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="tope">Tope diario ($, opcional)</label>
+          <input class="input" id="tope" type="number" min="1" step="100" formControlName="tope_diario" [class.invalido]="errorDe('tope_diario')" />
+          @if (errorDe('tope_diario')) { <small class="error">{{ errorDe('tope_diario') }}</small> }
+        </div>
+      </div>
+      <div class="acciones">
+        <button class="btn btn-borde" type="button" (click)="modalAbierto.set(false)">Cancelar</button>
+        <button class="btn btn-primario" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardar tarifa' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}
