@@ -1,0 +1,85 @@
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+@if (aviso()) {
+  <div class="exito">{{ aviso() }}</div>
+}
+
+<section class="card">
+  <div class="encabezado" style="margin-bottom: 8px">
+    <h2 style="margin: 0">Planes de mensualidad</h2>
+    <button class="btn btn-primario btn-sm" type="button" (click)="abrirFormulario()">
+      <i class="fa-solid fa-plus"></i>Nuevo plan
+    </button>
+  </div>
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr><th>Plan</th><th>Tipo</th><th>Valor</th><th>Duración</th><th>Estado</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (p of planes(); track p.id) {
+          <tr [class.inactivo]="!p.activo">
+            <td><b>{{ p.nombre }}</b></td>
+            <td>{{ p.tipo_vehiculo_nombre }}</td>
+            <td>{{ pesos(p.valor) }}</td>
+            <td>{{ p.dias }} días</td>
+            <td>{{ p.activo ? 'Se vende' : 'Desactivado' }}</td>
+            <td>
+              <div class="acciones-fila">
+                <button class="btn btn-borde btn-sm" type="button" (click)="abrirFormulario(p)" [attr.aria-label]="'Editar ' + p.nombre">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn btn-sm" type="button" [class.btn-peligro]="p.activo" [class.btn-borde]="!p.activo" (click)="cambiarEstado(p)">
+                  {{ p.activo ? 'Desactivar' : 'Activar' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="vacio">No hay planes. Crea uno para poder vender mensualidades.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="nota" style="margin-top: 12px">Un plan que nunca se vendió se elimina al desactivarlo; uno ya vendido queda en el historial.</p>
+</section>
+
+@if (modalAbierto()) {
+  <app-modal [titulo]="editando() ? 'Editar plan' : 'Nuevo plan'" (cerrar)="modalAbierto.set(false)">
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      @if (errorForm()) {
+        <div class="alerta">{{ errorForm() }}</div>
+      }
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input class="input" id="nombre" formControlName="nombre" placeholder="Mensual carro" [class.invalido]="errorDe('nombre')" />
+        @if (errorDe('nombre')) { <small class="error">{{ errorDe('nombre') }}</small> }
+      </div>
+      <div class="campos-2">
+        <div class="campo">
+          <label for="tipo">Tipo de vehículo</label>
+          <select class="input" id="tipo" formControlName="tipo_vehiculo">
+            @for (t of tipos(); track t.id) {
+              <option [ngValue]="t.id">{{ t.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div class="campo">
+          <label for="dias">Duración (días)</label>
+          <input class="input" id="dias" type="number" min="1" formControlName="dias" [class.invalido]="errorDe('dias')" />
+          @if (errorDe('dias')) { <small class="error">{{ errorDe('dias') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="valor">Valor ($)</label>
+          <input class="input" id="valor" type="number" min="1" step="1000" formControlName="valor" [class.invalido]="errorDe('valor')" />
+          @if (errorDe('valor')) { <small class="error">{{ errorDe('valor') }}</small> }
+        </div>
+      </div>
+      <div class="acciones">
+        <button class="btn btn-borde" type="button" (click)="modalAbierto.set(false)">Cancelar</button>
+        <button class="btn btn-primario" type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Guardar' }}</button>
+      </div>
+    </form>
+  </app-modal>
+}
