@@ -4,13 +4,8 @@
     <p>{{ total() }} vehículos dentro · {{ disponibles() }} espacios disponibles</p>
   </div>
   <div class="fila">
-    <!-- El registro de entrada y salida con tiquete se construye en el avance 3 -->
-    <button class="btn btn-primario" type="button" disabled title="Disponible en el avance 3">
-      <i class="fa-solid fa-plus"></i>Registrar entrada
-    </button>
-    <button class="btn btn-oscuro" type="button" disabled title="Disponible en el avance 3">
-      <i class="fa-solid fa-barcode"></i>Registrar salida
-    </button>
+    <a class="btn btn-primario" routerLink="entrada"><i class="fa-solid fa-plus"></i>Registrar entrada</a>
+    <a class="btn btn-oscuro" routerLink="salida"><i class="fa-solid fa-barcode"></i>Registrar salida</a>
   </div>
 </header>
 
@@ -18,7 +13,7 @@
   <div class="alerta">{{ error() }}</div>
 }
 
-<div class="card">
+<div class="card" style="margin-bottom: 24px">
   <div class="encabezado" style="margin-bottom: 8px">
     <h2 style="margin: 0">Vehículos actualmente dentro</h2>
     <button class="btn btn-borde btn-sm" type="button" (click)="cargar()">
@@ -28,20 +23,57 @@
   <div class="tabla-wrap">
     <table>
       <thead>
-        <tr><th>Tiquete</th><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th>Tiempo</th></tr>
+        <tr><th>Tiquete</th><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th>Tiempo</th><th>Valor a hoy</th><th></th></tr>
       </thead>
       <tbody>
-        @for (e of ocupados(); track e.id) {
+        @for (t of activos(); track t.id) {
           <tr>
-            <td>{{ e.ocupante?.tiquete }}</td>
-            <td><b>{{ e.ocupante?.placa }}</b></td>
-            <td>{{ e.ocupante?.tipo_vehiculo }}</td>
-            <td>{{ e.codigo }}</td>
-            <td>{{ e.ocupante?.fecha_entrada | date: 'hh:mm a' }}</td>
-            <td><span class="badge">{{ duracion(e.ocupante?.minutos ?? 0) }}</span></td>
+            <td><a class="enlace-tabla" [routerLink]="['tiquete', t.codigo]">{{ t.codigo }}</a></td>
+            <td><b>{{ t.placa }}</b></td>
+            <td>{{ t.tipo_vehiculo }}</td>
+            <td>{{ t.espacio }}</td>
+            <td>{{ t.fecha_entrada | date: 'hh:mm a' }}</td>
+            <td><span class="badge">{{ duracion(t.minutos_transcurridos ?? 0) }}</span></td>
+            <td>
+              @if (t.es_mensualidad) {
+                <span class="badge badge-claro">Mensualidad</span>
+              } @else {
+                {{ pesos(t.valor_actual) }}
+              }
+            </td>
+            <td>
+              <a class="btn btn-borde btn-sm" [routerLink]="['salida']" [queryParams]="{ codigo: t.codigo }">Dar salida</a>
+            </td>
           </tr>
         } @empty {
-          <tr><td colspan="6" class="vacio">{{ cargando() ? 'Cargando…' : 'No hay vehículos dentro.' }}</td></tr>
+          <tr><td colspan="8" class="vacio">{{ cargando() ? 'Cargando…' : 'No hay vehículos dentro.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="nota" style="margin-top: 12px">Se actualiza sola cada 15 segundos.</p>
+</div>
+
+<div class="card">
+  <h2>Últimas salidas</h2>
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr><th>Tiquete</th><th>Placa</th><th>Espacio</th><th>Salida</th><th>Tiempo</th><th>Valor</th><th>Pago</th></tr>
+      </thead>
+      <tbody>
+        @for (t of recientes(); track t.id) {
+          <tr>
+            <td><a class="enlace-tabla" [routerLink]="['tiquete', t.codigo]">{{ t.codigo }}</a></td>
+            <td><b>{{ t.placa }}</b></td>
+            <td>{{ t.espacio }}</td>
+            <td>{{ t.fecha_salida | date: 'dd/MM hh:mm a' }}</td>
+            <td>{{ duracion(t.minutos ?? 0) }}</td>
+            <td>{{ pesos(t.valor) }}</td>
+            <td>{{ t.es_mensualidad ? 'Mensualidad' : (t.metodo_pago ?? '—') }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="vacio">Todavía no hay salidas registradas.</td></tr>
         }
       </tbody>
     </table>

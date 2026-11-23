@@ -4,9 +4,12 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.mensualidades.reglas import espacios_reservados
 from apps.operaciones.models import Tiquete
 from apps.reportes.bitacora import BitacoraMixin, registrar
 from apps.usuarios.permissions import AdminOSoloLectura
+from apps.vehiculos.models import Vehiculo
+from apps.vehiculos.serializers import normalizar_placa
 
 from .models import Espacio, Zona
 from .serializers import EspacioLoteSerializer, EspacioSerializer, ZonaSerializer
@@ -81,3 +84,19 @@ class EspacioViewSet(BitacoraMixin, viewsets.ModelViewSet):
         )
         espacios = self.get_queryset().filter(codigo__in=[e.codigo for e in creados])
         return Response(self.get_serializer(espacios, many=True).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False)
+    def disponibles(self, request):
+        """
+        GET /api/espacios/disponibles/?tipo=Carro&placa=ABC123
+        Espacios DISPONIBLES del tipo pedido. Los espacios fijos de mensualidades vigentes
+        se reservan: solo se ofrecen al vehículo de esa mensualidad.
+        """
+        if not request.query_params.get("tipo"):
+            return Response({"detail": "Indica el tipo de vehículo."}, status=status.HTTP_400_BAD_REQUEST)
+        placa = normalizar_placa(request.query_params.get("placa", ""))
+        vehiculo = Vehiculo.objects.filter(placa=placa).first() if placa else None
+        espacios = self.get_queryset().filter(estado=Espacio.Estado.DISPONIBLE).exclude(
+            pk__in=espacios_reservados(excepto_vehiculo=vehiculo)
+        )
+        return Response(self.get_serializer(espacios, many=True).data)

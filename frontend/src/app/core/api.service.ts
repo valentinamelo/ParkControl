@@ -3,7 +3,25 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { Espacio, Horario, Parqueadero, Tarifa, TipoVehiculo, Usuario, UsuarioForm, Vehiculo, Zona } from './models';
+import {
+  Cliente,
+  ConsultaPlaca,
+  EntradaForm,
+  Espacio,
+  Horario,
+  Mensualidad,
+  MetodoPago,
+  Parqueadero,
+  PlanMensual,
+  Tarifa,
+  Tiquete,
+  TipoVehiculo,
+  Usuario,
+  UsuarioForm,
+  Vehiculo,
+  VentaMensualidad,
+  Zona,
+} from './models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -17,6 +35,13 @@ export class ApiService {
     if (filtros.estado) params = params.set('estado', filtros.estado);
     if (filtros.tipo) params = params.set('tipo', filtros.tipo);
     return this.http.get<Espacio[]>(`${this.url}/espacios/`, { params });
+  }
+
+  /** Espacios libres para un tipo de vehículo; los fijos de otras mensualidades no aparecen. */
+  espaciosDisponibles(tipo: string, placa = ''): Observable<Espacio[]> {
+    let params = new HttpParams().set('tipo', tipo);
+    if (placa) params = params.set('placa', placa);
+    return this.http.get<Espacio[]>(`${this.url}/espacios/disponibles/`, { params });
   }
 
   /** Crea varios espacios seguidos; si la zona no existe se crea con el tipo indicado. */
@@ -125,5 +150,77 @@ export class ApiService {
   /** El backend no borra al usuario, lo desactiva. */
   desactivarUsuario(id: number): Observable<Usuario> {
     return this.http.delete<Usuario>(`${this.url}/usuarios/${id}/`);
+  }
+
+  // --- Tiquetes (entrada, salida, cobro) ---
+
+  consultarPlaca(placa: string): Observable<ConsultaPlaca> {
+    return this.http.get<ConsultaPlaca>(`${this.url}/tiquetes/consultar-placa/`, { params: { placa } });
+  }
+
+  registrarEntrada(datos: EntradaForm): Observable<Tiquete> {
+    return this.http.post<Tiquete>(`${this.url}/tiquetes/entrada/`, datos);
+  }
+
+  /** Datos del tiquete; si está abierto incluye el cobro calculado al momento. */
+  tiquete(codigo: string, perdido = false): Observable<Tiquete> {
+    const params = perdido ? new HttpParams().set('perdido', '1') : undefined;
+    return this.http.get<Tiquete>(`${this.url}/tiquetes/${encodeURIComponent(codigo)}/`, { params });
+  }
+
+  registrarSalida(codigo: string, datos: { metodo?: MetodoPago; tiquete_perdido?: boolean }): Observable<Tiquete> {
+    return this.http.post<Tiquete>(`${this.url}/tiquetes/${encodeURIComponent(codigo)}/salida/`, datos);
+  }
+
+  tiquetesActivos(placa = ''): Observable<Tiquete[]> {
+    const params = placa ? new HttpParams().set('placa', placa) : undefined;
+    return this.http.get<Tiquete[]>(`${this.url}/tiquetes/activos/`, { params });
+  }
+
+  /** Últimos 100 tiquetes, opcionalmente filtrados. */
+  tiquetes(filtros: { estado?: string; placa?: string } = {}): Observable<Tiquete[]> {
+    let params = new HttpParams();
+    if (filtros.estado) params = params.set('estado', filtros.estado);
+    if (filtros.placa) params = params.set('placa', filtros.placa);
+    return this.http.get<Tiquete[]>(`${this.url}/tiquetes/`, { params });
+  }
+
+  // --- Clientes y mensualidades ---
+
+  clientePorDocumento(documento: string): Observable<Cliente[]> {
+    return this.http.get<Cliente[]>(`${this.url}/clientes/`, { params: { documento } });
+  }
+
+  planesMensuales(soloActivos = false): Observable<PlanMensual[]> {
+    const params = soloActivos ? new HttpParams().set('activos', '1') : undefined;
+    return this.http.get<PlanMensual[]>(`${this.url}/planes-mensuales/`, { params });
+  }
+
+  crearPlan(datos: Partial<PlanMensual>): Observable<PlanMensual> {
+    return this.http.post<PlanMensual>(`${this.url}/planes-mensuales/`, datos);
+  }
+
+  actualizarPlan(id: number, datos: Partial<PlanMensual>): Observable<PlanMensual> {
+    return this.http.patch<PlanMensual>(`${this.url}/planes-mensuales/${id}/`, datos);
+  }
+
+  /** Si el plan ya se vendió, el backend lo desactiva en lugar de borrarlo. */
+  eliminarPlan(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.url}/planes-mensuales/${id}/`);
+  }
+
+  mensualidades(filtros: { estado?: string; q?: string } = {}): Observable<Mensualidad[]> {
+    let params = new HttpParams();
+    if (filtros.estado) params = params.set('estado', filtros.estado);
+    if (filtros.q) params = params.set('q', filtros.q);
+    return this.http.get<Mensualidad[]>(`${this.url}/mensualidades/`, { params });
+  }
+
+  venderMensualidad(datos: VentaMensualidad): Observable<Mensualidad> {
+    return this.http.post<Mensualidad>(`${this.url}/mensualidades/`, datos);
+  }
+
+  renovarMensualidad(id: number, metodo: MetodoPago): Observable<Mensualidad> {
+    return this.http.post<Mensualidad>(`${this.url}/mensualidades/${id}/renovar/`, { metodo });
   }
 }

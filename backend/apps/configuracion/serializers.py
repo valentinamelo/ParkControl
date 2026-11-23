@@ -6,7 +6,7 @@ from .models import Horario, Parqueadero, Tarifa, TipoVehiculo
 class ParqueaderoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parqueadero
-        fields = ["id", "nombre", "nit", "direccion", "telefono"]
+        fields = ["id", "nombre", "nit", "direccion", "telefono", "multa_tiquete_perdido"]
 
 
 class TipoVehiculoSerializer(serializers.ModelSerializer):

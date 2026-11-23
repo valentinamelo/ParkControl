@@ -17,6 +17,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 export class ConfiguracionComponent {
   protected pestanas = [
     { ruta: 'tarifas', texto: 'Tarifas', icono: 'fa-tags' },
+    { ruta: 'planes', texto: 'Planes mensuales', icono: 'fa-id-card' },
     { ruta: 'horarios', texto: 'Horarios', icono: 'fa-clock' },
     { ruta: 'usuarios', texto: 'Usuarios', icono: 'fa-users' },
     { ruta: 'parqueadero', texto: 'Parqueadero', icono: 'fa-building' },

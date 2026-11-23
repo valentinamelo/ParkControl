@@ -8,6 +8,9 @@ class Parqueadero(models.Model):
     nit = models.CharField(max_length=30, blank=True)
     direccion = models.CharField(max_length=150, blank=True)
     telefono = models.CharField(max_length=30, blank=True)
+    multa_tiquete_perdido = models.DecimalField(
+        "multa por tiquete perdido", max_digits=10, decimal_places=0, default=10000
+    )
 
     class Meta:
         verbose_name = "parqueadero"

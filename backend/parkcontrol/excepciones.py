@@ -1,7 +1,14 @@
 from django.db.models import ProtectedError
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
 from rest_framework.views import exception_handler
+
+
+class ReglaNegocio(APIException):
+    """Una regla de negocio impide la operación (400). Dentro de transaction.atomic deshace todo lo hecho."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
 
 
 def manejar_excepciones(exc, context):

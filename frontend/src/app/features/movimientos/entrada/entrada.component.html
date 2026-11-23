@@ -1,0 +1,110 @@
+<header class="encabezado">
+  <div>
+    <a class="volver" routerLink="/movimientos"><i class="fa-solid fa-arrow-left"></i>Movimientos</a>
+    <h1>Registrar entrada</h1>
+  </div>
+</header>
+
+<form class="grid-2" [formGroup]="form" (ngSubmit)="registrar()">
+  <section class="card">
+    @if (error()) {
+      <div class="alerta">
+        {{ error() }}
+        @if (confirmarHorario()) {
+          <div class="acciones" style="justify-content: flex-start">
+            <button class="btn btn-oscuro btn-sm" type="button" (click)="registrar(true)" [disabled]="guardando()">
+              Registrar de todas formas
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="campo">
+      <label for="placa">Placa</label>
+      <input class="input placa" id="placa" formControlName="placa" placeholder="ABC123" autocomplete="off" autofocus
+             [class.invalido]="errorPlaca()" />
+      @if (errorPlaca()) { <small class="error">{{ errorPlaca() }}</small> }
+    </div>
+
+    @if (consultando()) {
+      <p class="nota">Buscando la placa…</p>
+    }
+
+    @if (consulta(); as c) {
+      @if (yaDentro(); as dentro) {
+        <div class="alerta">
+          {{ c.placa }} ya está dentro con el tiquete <b>{{ dentro.codigo }}</b> en el espacio {{ dentro.espacio }}.
+          <div class="acciones" style="justify-content: flex-start">
+            <a class="btn btn-oscuro btn-sm" routerLink="/movimientos/salida" [queryParams]="{ codigo: dentro.codigo }">Ir a la salida</a>
+          </div>
+        </div>
+      } @else {
+        @if (c.mensualidad; as m) {
+          <div class="exito">
+            <i class="fa-solid fa-id-card"></i>
+            Mensualidad vigente de <b>{{ m.cliente }}</b> hasta el {{ m.fecha_fin | date: 'dd/MM/yyyy' }}: no paga al salir.
+            @if (m.espacio_fijo) { Espacio fijo: <b>{{ m.espacio_fijo }}</b>. }
+          </div>
+        }
+
+        @if (c.vehiculo; as v) {
+          <div class="info">
+            Vehículo registrado: <b>{{ v.tipo_vehiculo_nombre }}</b>
+            @if (v.marca || v.modelo || v.color) { · {{ v.marca }} {{ v.modelo }} {{ v.color }} }
+          </div>
+        } @else {
+          <p class="info">Vehículo nuevo: se registra con esta entrada.</p>
+          <div class="campo">
+            <label for="tipo">Tipo de vehículo</label>
+            <select class="input" id="tipo" formControlName="tipo_vehiculo">
+              @for (t of tipos(); track t.id) {
+                <option [ngValue]="t.id">{{ t.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div class="campos-2">
+            <div class="campo">
+              <label for="marca">Marca (opcional)</label>
+              <input class="input" id="marca" formControlName="marca" />
+            </div>
+            <div class="campo">
+              <label for="modelo">Modelo (opcional)</label>
+              <input class="input" id="modelo" formControlName="modelo" />
+            </div>
+            <div class="campo">
+              <label for="color">Color (opcional)</label>
+              <input class="input" id="color" formControlName="color" />
+            </div>
+          </div>
+        }
+      }
+    }
+
+    <div class="acciones">
+      <a class="btn btn-borde" routerLink="/movimientos">Cancelar</a>
+      <button class="btn btn-primario" type="submit" [disabled]="guardando() || !consulta() || yaDentro() || !espacioElegido()">
+        <i class="fa-solid fa-ticket"></i>{{ guardando() ? 'Registrando…' : 'Registrar y generar tiquete' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Espacio @if (tipoNombre()) { <span class="nota">· {{ tipoNombre() }}</span> }</h2>
+    @if (!consulta() || yaDentro()) {
+      <p class="nota">Escribe la placa para ver los espacios disponibles.</p>
+    } @else if (espacios().length === 0) {
+      <div class="alerta">No hay espacios disponibles para {{ tipoNombre() }}.</div>
+    } @else {
+      <div class="espacios">
+        @for (e of espacios(); track e.id) {
+          <button type="button" class="espacio" [class.elegido]="espacioElegido() === e.id"
+                  [attr.aria-pressed]="espacioElegido() === e.id" (click)="espacioElegido.set(e.id)">
+            {{ e.codigo }}
+          </button>
+        }
+      </div>
+      <p class="nota" style="margin-top: 12px">{{ espacios().length }} disponibles. El seleccionado está en amarillo.</p>
+    }
+  </section>
+</form>
