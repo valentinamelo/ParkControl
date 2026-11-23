@@ -1,0 +1,10 @@
+.git
+**/__pycache__
+**/*.pyc
+backend/.venv
+backend/db.sqlite3
+backend/staticfiles
+frontend/node_modules
+frontend/dist
+frontend/.angular
+package-lock.json

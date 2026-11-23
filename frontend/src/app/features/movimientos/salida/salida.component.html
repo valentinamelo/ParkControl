@@ -1,13 +1,13 @@
 <header class="encabezado">
   <div>
-    <a class="volver" routerLink="/movimientos"><i class="fa-solid fa-arrow-left"></i>Movimientos</a>
+    <a class="volver" routerLink="/movimientos"><i aria-hidden="true" class="fa-solid fa-arrow-left"></i>Movimientos</a>
     <h1>Registrar salida</h1>
   </div>
 </header>
 
 @if (ultimaSalida(); as s) {
   <div class="exito">
-    <i class="fa-solid fa-circle-check"></i>
+    <i aria-hidden="true" class="fa-solid fa-circle-check"></i>
     Salida de <b>{{ s.placa }}</b> registrada ({{ s.codigo }}, {{ duracion(s.minutos ?? 0) }}):
     <b>{{ s.es_mensualidad ? 'mensualidad, sin cobro' : pesos(s.valor) }}</b>
     @if (s.metodo_pago) { · {{ s.metodo_pago }} }
@@ -20,12 +20,12 @@
     <form (ngSubmit)="buscar()">
       <label class="etiqueta" for="campo">Escanea el tiquete o digita el código</label>
       <div class="lector">
-        <i class="fa-solid fa-barcode"></i>
+        <i aria-hidden="true" class="fa-solid fa-barcode"></i>
         <input #campo class="input" id="campo" name="codigo" [(ngModel)]="texto" placeholder="PC-000123 o placa"
                autocomplete="off" autofocus />
         <button class="btn btn-oscuro" type="submit" [disabled]="buscando()">Buscar</button>
         <button class="btn btn-borde" type="button" (click)="camara.set(true)" aria-label="Escanear con la cámara">
-          <i class="fa-solid fa-camera"></i>
+          <i aria-hidden="true" class="fa-solid fa-camera"></i>
         </button>
       </div>
       <p class="nota">Con el lector USB basta con escanear: el código se busca solo. ¿Tiquete perdido? Escribe la placa.</p>
@@ -77,7 +77,7 @@
             @for (m of metodos; track m.valor) {
               <button type="button" class="metodo" role="radio" [attr.aria-checked]="metodo() === m.valor"
                       [class.elegido]="metodo() === m.valor" (click)="metodo.set(m.valor)">
-                <i class="fa-solid" [class]="m.icono"></i>{{ m.texto }}
+                <i aria-hidden="true" class="fa-solid" [class]="m.icono"></i>{{ m.texto }}
               </button>
             }
           </div>

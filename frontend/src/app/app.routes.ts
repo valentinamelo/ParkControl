@@ -87,6 +87,25 @@ export const routes: Routes = [
           { path: '', pathMatch: 'full', redirectTo: 'tarifas' },
         ],
       },
+      {
+        path: 'reportes',
+        canActivate: [rolGuard],
+        data: { roles: ['ADMIN'] },
+        loadComponent: () => import('./features/reportes/reportes.component').then((m) => m.ReportesComponent),
+        children: [
+          {
+            path: 'ingresos',
+            loadComponent: () =>
+              import('./features/reportes/ingresos/ingresos.component').then((m) => m.IngresosComponent),
+          },
+          {
+            path: 'bitacora',
+            loadComponent: () =>
+              import('./features/reportes/bitacora/bitacora.component').then((m) => m.BitacoraComponent),
+          },
+          { path: '', pathMatch: 'full', redirectTo: 'ingresos' },
+        ],
+      },
       // Al entrar a la raíz, cada rol va a su pantalla de inicio
       { path: '', pathMatch: 'full', redirectTo: () => inject(AuthService).rutaInicio() },
     ],

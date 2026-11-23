@@ -4,7 +4,7 @@
     <p>Clientes frecuentes: no pagan al salir mientras su mensualidad esté vigente.</p>
   </div>
   <button class="btn btn-primario" type="button" (click)="abrirVenta()" [disabled]="!planes().length">
-    <i class="fa-solid fa-plus"></i>Vender mensualidad
+    <i aria-hidden="true" class="fa-solid fa-plus"></i>Vender mensualidad
   </button>
 </header>
 
@@ -18,7 +18,7 @@
 <div class="card">
   <div class="encabezado" style="margin-bottom: 12px">
     <div class="buscador" style="margin: 0; flex: 1">
-      <i class="fa-solid fa-magnifying-glass"></i>
+      <i aria-hidden="true" class="fa-solid fa-magnifying-glass"></i>
       <input class="input" placeholder="Placa, cliente o documento…" (input)="buscar($any($event.target).value)" />
     </div>
     <div class="fila" role="group" aria-label="Estado">
@@ -52,7 +52,7 @@
             </td>
             <td>
               <button class="btn btn-borde btn-sm" type="button" (click)="abrirRenovacion(m)">
-                <i class="fa-solid fa-rotate-right"></i>Renovar
+                <i aria-hidden="true" class="fa-solid fa-rotate-right"></i>Renovar
               </button>
             </td>
           </tr>

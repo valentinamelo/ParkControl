@@ -4,8 +4,8 @@
     <p>{{ total() }} vehículos dentro · {{ disponibles() }} espacios disponibles</p>
   </div>
   <div class="fila">
-    <a class="btn btn-primario" routerLink="entrada"><i class="fa-solid fa-plus"></i>Registrar entrada</a>
-    <a class="btn btn-oscuro" routerLink="salida"><i class="fa-solid fa-barcode"></i>Registrar salida</a>
+    <a class="btn btn-primario" routerLink="entrada"><i aria-hidden="true" class="fa-solid fa-plus"></i>Registrar entrada</a>
+    <a class="btn btn-oscuro" routerLink="salida"><i aria-hidden="true" class="fa-solid fa-barcode"></i>Registrar salida</a>
   </div>
 </header>
 
@@ -17,7 +17,7 @@
   <div class="encabezado" style="margin-bottom: 8px">
     <h2 style="margin: 0">Vehículos actualmente dentro</h2>
     <button class="btn btn-borde btn-sm" type="button" (click)="cargar()">
-      <i class="fa-solid fa-rotate"></i>Actualizar
+      <i aria-hidden="true" class="fa-solid fa-rotate"></i>Actualizar
     </button>
   </div>
   <div class="tabla-wrap">
