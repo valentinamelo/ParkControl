@@ -1,0 +1,22 @@
+.volver { display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--texto-suave); margin-bottom: 6px; }
+.volver:hover { color: var(--negro); }
+
+/* Tamaño de impresora térmica de 80 mm */
+.papel {
+  width: 100%; max-width: 320px; margin: 0 auto; padding: 22px 20px; background: var(--blanco);
+  border-radius: var(--radio); box-shadow: var(--sombra); font-size: 0.85rem; color: #000;
+}
+.centro { text-align: center; }
+header.centro { display: flex; flex-direction: column; gap: 2px; }
+.nombre { font-size: 1.1rem; }
+hr { border: 0; border-top: 1px dashed #999; margin: 14px 0; }
+.placa { font-size: 2rem; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 10px; }
+dl div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+dt { color: #555; }
+dd { margin: 0; font-weight: 600; text-align: right; }
+dl .total { font-size: 1.1rem; border-top: 1px solid #000; margin-top: 6px; padding-top: 6px; }
+.pie { margin-top: 12px; font-size: 0.75rem; color: #555; }
+
+@media print {
+  .papel { box-shadow: none; border-radius: 0; max-width: 80mm; padding: 0; }
+}

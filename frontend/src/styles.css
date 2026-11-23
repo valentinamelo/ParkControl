@@ -94,3 +94,17 @@ tr.inactivo td { color: var(--texto-suave); }
 @media (max-width: 600px) {
   .campos-2 { grid-template-columns: 1fr; }
 }
+
+/* Avance 3: operación */
+.enlace-tabla { font-weight: 600; text-decoration: underline; text-decoration-color: var(--amarillo); text-underline-offset: 3px; }
+.info { padding: 12px 14px; border-radius: var(--radio); font-size: 0.875rem; margin-bottom: 16px; background: var(--gris); }
+.info b { font-weight: 600; }
+
+/* Al imprimir solo sale el tiquete */
+@media print {
+  body { background: #fff; }
+  .sidebar, .no-imprimir { display: none !important; }
+  main { padding: 0 !important; }
+}
+.subtitulo { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-suave); margin: 4px 0 12px; }
+.etiqueta { font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; }

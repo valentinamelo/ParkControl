@@ -1,8 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { Observable, timer } from 'rxjs';
 
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
@@ -10,6 +11,7 @@ import { erroresDeCampo, mensajeError } from '../../core/errores';
 import { duracion } from '../../core/formato';
 import { Espacio, TipoVehiculo, Zona } from '../../core/models';
 import { ModalComponent } from '../../shared/modal/modal.component';
+import { INTERVALO_ACTUALIZACION } from '../movimientos/movimientos.component';
 
 interface GrupoZona {
   zona: string;
@@ -25,6 +27,7 @@ interface GrupoZona {
 })
 export class EspaciosComponent implements OnInit {
   private api = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
   protected auth = inject(AuthService);
 
   protected espacios = signal<Espacio[]>([]);
@@ -59,7 +62,10 @@ export class EspaciosComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.cargar();
+    // El mapa se actualiza solo para ver las entradas y salidas de otros puestos
+    timer(0, INTERVALO_ACTUALIZACION)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.cargar());
     if (this.auth.esAdmin()) {
       this.api.tiposVehiculo().subscribe((t) => this.tipos.set(t));
     }

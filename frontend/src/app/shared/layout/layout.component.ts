@@ -16,6 +16,7 @@ const MENU: ItemMenu[] = [
   { ruta: '/movimientos', texto: 'Movimientos', icono: 'fa-right-left', roles: ['ADMIN', 'TRABAJADOR'] },
   { ruta: '/espacios', texto: 'Espacios', icono: 'fa-square-parking', roles: ['ADMIN', 'TRABAJADOR'] },
   { ruta: '/vehiculos', texto: 'Vehículos', icono: 'fa-car', roles: ['ADMIN', 'TRABAJADOR'] },
+  { ruta: '/mensualidades', texto: 'Mensualidades', icono: 'fa-id-card', roles: ['ADMIN', 'TRABAJADOR'] },
   { ruta: '/configuracion', texto: 'Configuración', icono: 'fa-gear', roles: ['ADMIN'] },
 ];
 

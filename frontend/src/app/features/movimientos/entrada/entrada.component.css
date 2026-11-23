@@ -1,0 +1,12 @@
+.volver { display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--texto-suave); margin-bottom: 6px; }
+.volver:hover { color: var(--negro); }
+.placa { font-size: 1.6rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 14px 16px; }
+.espacios { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 10px; }
+.espacio {
+  padding: 16px 0; border-radius: var(--radio); border: 1px solid var(--linea); background: var(--blanco);
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.espacio:hover { border-color: var(--negro); }
+.espacio.elegido { background: var(--amarillo); border-color: var(--amarillo); }
+.alerta .acciones, .exito i { margin-top: 8px; }
+.exito i { margin: 0 6px 0 0; }
