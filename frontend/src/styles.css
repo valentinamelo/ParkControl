@@ -44,6 +44,8 @@ h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 16px; }
 .card { background: var(--blanco); border-radius: var(--radio); box-shadow: var(--sombra); padding: 22px; }
 .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+/* Sin esto, una tabla ancha estira su columna de la grilla en lugar de hacer scroll dentro de .tabla-wrap */
+.grid-2 > *, .grid-4 > * { min-width: 0; }
 .fila { display: flex; gap: 12px; flex-wrap: wrap; }
 .columna { display: flex; flex-direction: column; gap: 10px; }
 
@@ -108,3 +110,10 @@ tr.inactivo td { color: var(--texto-suave); }
 }
 .subtitulo { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-suave); margin: 4px 0 12px; }
 .etiqueta { font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; }
+
+/* Pestañas de Configuración y Reportes */
+.pestanas { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--linea); overflow-x: auto; }
+.pestanas a { padding: 10px 16px; font-size: 0.9rem; color: var(--texto-suave); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.pestanas a:hover { color: var(--negro); }
+.pestanas a.activa { color: var(--negro); font-weight: 600; border-bottom-color: var(--amarillo); }
+.pestanas i { margin-right: 6px; }

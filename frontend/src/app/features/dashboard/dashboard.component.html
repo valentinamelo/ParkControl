@@ -1,48 +1,107 @@
 <header class="encabezado">
-  <h1>Dashboard</h1>
+  <div>
+    <h1>Dashboard</h1>
+    <p>
+      {{ resumen()?.fecha | date: 'EEEE d \'de\' MMMM' }}
+      @if (resumen()?.alcance === 'turno') { · Los ingresos y movimientos son los de tu turno }
+    </p>
+  </div>
+  <div class="fila">
+    <a class="btn btn-primario" routerLink="/movimientos/entrada"><i aria-hidden="true" class="fa-solid fa-plus"></i>Entrada</a>
+    <a class="btn btn-oscuro" routerLink="/movimientos/salida"><i aria-hidden="true" class="fa-solid fa-barcode"></i>Salida</a>
+  </div>
 </header>
 
 @if (error()) {
   <div class="alerta">{{ error() }}</div>
 }
 
-<div class="grid-4">
-  <app-stat-card icono="fa-square-parking" [valor]="activos().length" etiqueta="Espacios totales" />
-  <app-stat-card icono="fa-car-side" [valor]="ocupados().length" etiqueta="Espacios ocupados" />
-  <app-stat-card icono="fa-circle-check" [valor]="disponibles().length" etiqueta="Espacios disponibles" />
-  <app-stat-card icono="fa-car" [valor]="totalVehiculos()" etiqueta="Vehículos registrados" />
-</div>
+@if (resumen(); as r) {
+  <div class="grid-4">
+    <app-stat-card icono="fa-square-parking" [valor]="r.espacios.total" etiqueta="Espacios totales" />
+    <app-stat-card icono="fa-car-side" [valor]="r.espacios.ocupados + ' (' + r.espacios.ocupacion + ' %)'" etiqueta="Ocupados" />
+    <app-stat-card icono="fa-circle-check" [valor]="r.espacios.disponibles" etiqueta="Disponibles" />
+    <app-stat-card icono="fa-sack-dollar" [valor]="pesos(r.hoy.ingresos)"
+                   [etiqueta]="r.alcance === 'turno' ? 'Ingresos de tu turno' : 'Ingresos de hoy'" />
+  </div>
 
-<div class="grid-2">
+  <div class="grid-3">
+    <section class="card">
+      <h2>Ocupación por tipo</h2>
+      <ul class="ocupacion">
+        @for (t of r.espacios.por_tipo; track t.tipo) {
+          <li>
+            <div class="fila-barra"><span>{{ t.tipo }}</span><b>{{ t.ocupados }} / {{ t.total }}</b></div>
+            <div class="pista" role="meter" [attr.aria-valuenow]="t.ocupados" aria-valuemin="0" [attr.aria-valuemax]="t.total"
+                 [attr.aria-label]="'Ocupación de ' + t.tipo">
+              <div class="relleno" [class.lleno]="t.disponibles === 0" [style.width.%]="(t.ocupados * 100) / t.total"></div>
+            </div>
+            <small class="nota">{{ t.disponibles }} {{ t.disponibles === 1 ? 'disponible' : 'disponibles' }}</small>
+          </li>
+        }
+      </ul>
+      @if (r.espacios.inactivos) {
+        <p class="nota" style="margin-top: 12px">{{ r.espacios.inactivos }} espacios inactivos no se cuentan.</p>
+      }
+    </section>
+
+    <section class="card">
+      <h2>{{ r.alcance === 'turno' ? 'Tu turno hoy' : 'Movimiento de hoy' }}</h2>
+      <div class="cifras">
+        <div><b>{{ r.hoy.entradas }}</b><span>Entradas</span></div>
+        <div><b>{{ r.hoy.salidas }}</b><span>Salidas</span></div>
+        <div><b>{{ r.hoy.pagos }}</b><span>Pagos</span></div>
+      </div>
+      <h3 class="subtitulo">Por método de pago</h3>
+      <app-barras [grupos]="r.hoy.por_metodo" vacio="Todavía no hay pagos hoy." />
+    </section>
+
+    @if (r.semana; as semana) {
+      <section class="card">
+        <h2>Ingresos de la semana</h2>
+        <app-columnas [dias]="semana" />
+        @if (r.mensualidades; as m) {
+          <p class="nota" style="margin-top: 14px">
+            <a class="enlace-tabla" routerLink="/mensualidades">{{ m.vigentes }} mensualidades vigentes</a>
+            @if (m.por_vencer) { · <b>{{ m.por_vencer }}</b> vencen en los próximos 5 días }
+          </p>
+        }
+      </section>
+    } @else {
+      <section class="card">
+        <h2>Por concepto</h2>
+        <app-barras [grupos]="r.hoy.por_concepto" vacio="Todavía no hay pagos hoy." />
+      </section>
+    }
+  </div>
+
   <section class="card">
-    <h2>Vehículos actualmente dentro</h2>
+    <div class="encabezado" style="margin-bottom: 8px">
+      <h2 style="margin: 0">Vehículos actualmente dentro ({{ dentro().length }})</h2>
+      <a class="btn btn-borde btn-sm" routerLink="/movimientos">Ver todos</a>
+    </div>
     <div class="tabla-wrap">
       <table>
         <thead>
-          <tr><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Hora de entrada</th><th>Tiempo</th></tr>
+          <tr><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th>Tiempo</th><th>Valor a hoy</th></tr>
         </thead>
         <tbody>
-          @for (e of ocupados(); track e.id) {
+          @for (t of dentro().slice(0, 8); track t.id) {
             <tr>
-              <td><b>{{ e.ocupante?.placa }}</b></td>
-              <td>{{ e.ocupante?.tipo_vehiculo }}</td>
-              <td>{{ e.codigo }}</td>
-              <td>{{ e.ocupante?.fecha_entrada | date: 'hh:mm a' }}</td>
-              <td><span class="badge">{{ duracion(e.ocupante?.minutos ?? 0) }}</span></td>
+              <td><b>{{ t.placa }}</b></td>
+              <td>{{ t.tipo_vehiculo }}</td>
+              <td>{{ t.espacio }}</td>
+              <td>{{ t.fecha_entrada | date: 'hh:mm a' }}</td>
+              <td><span class="badge">{{ duracion(t.minutos_transcurridos ?? 0) }}</span></td>
+              <td>{{ t.es_mensualidad ? 'Mensualidad' : pesos(t.valor_actual) }}</td>
             </tr>
           } @empty {
-            <tr><td colspan="5" class="vacio">{{ cargando() ? 'Cargando…' : 'No hay vehículos dentro.' }}</td></tr>
+            <tr><td colspan="6" class="vacio">No hay vehículos dentro.</td></tr>
           }
         </tbody>
       </table>
     </div>
   </section>
-
-  <section class="card">
-    <h2>Acciones rápidas</h2>
-    <div class="columna">
-      <a class="btn btn-primario" routerLink="/movimientos"><i class="fa-solid fa-right-left"></i>Ir a movimientos</a>
-      <a class="btn btn-borde" routerLink="/espacios">Ver espacios</a>
-    </div>
-  </section>
-</div>
+} @else if (!error()) {
+  <p class="nota">Cargando…</p>
+}

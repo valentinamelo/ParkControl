@@ -28,6 +28,7 @@ class TiqueteSerializer(serializers.ModelSerializer):
             "id", "codigo", "placa", "tipo_vehiculo", "vehiculo_descripcion", "espacio",
             "fecha_entrada", "fecha_salida", "minutos", "minutos_transcurridos", "valor", "multa",
             "estado", "estado_display", "es_mensualidad", "usuario_entrada", "usuario_salida", "metodo_pago",
+            "motivo_anulacion",
         ]
 
     def get_vehiculo_descripcion(self, tiquete):
@@ -74,3 +75,15 @@ class SalidaSerializer(serializers.Serializer):
 
     metodo = serializers.ChoiceField(choices=Pago.Metodo.choices, required=False)
     tiquete_perdido = serializers.BooleanField(required=False, default=False)
+
+
+class AnulacionSerializer(serializers.Serializer):
+    """POST /api/tiquetes/{codigo}/anular/ {motivo}"""
+
+    motivo = serializers.CharField(max_length=200)
+
+    def validate_motivo(self, valor):
+        valor = valor.strip()
+        if len(valor) < 5:
+            raise serializers.ValidationError("Explica el motivo de la anulación (mínimo 5 caracteres).")
+        return valor

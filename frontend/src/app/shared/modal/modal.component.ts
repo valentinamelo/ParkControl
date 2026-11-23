@@ -10,7 +10,7 @@ import { Component, input, output } from '@angular/core';
         <header>
           <h2>{{ titulo() }}</h2>
           <button class="cerrar" type="button" aria-label="Cerrar" (click)="cerrar.emit()">
-            <i class="fa-solid fa-xmark"></i>
+            <i aria-hidden="true" class="fa-solid fa-xmark"></i>
           </button>
         </header>
         <ng-content />
