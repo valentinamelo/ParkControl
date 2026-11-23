@@ -5,7 +5,7 @@ import { Component, input } from '@angular/core';
   selector: 'app-stat-card',
   template: `
     <div class="card stat">
-      <div class="icono"><i class="fa-solid" [class]="icono()"></i></div>
+      <div class="icono"><i aria-hidden="true" class="fa-solid" [class]="icono()"></i></div>
       <div>
         <b>{{ valor() }}</b>
         <span>{{ etiqueta() }}</span>

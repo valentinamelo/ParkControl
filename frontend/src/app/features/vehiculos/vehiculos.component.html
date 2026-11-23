@@ -1,7 +1,7 @@
 <header class="encabezado">
   <h1>Vehículos</h1>
   <button class="btn btn-primario" type="button" (click)="abrirFormulario()">
-    <i class="fa-solid fa-plus"></i>Registrar vehículo
+    <i aria-hidden="true" class="fa-solid fa-plus"></i>Registrar vehículo
   </button>
 </header>
 
@@ -14,7 +14,7 @@
 
 <div class="card">
   <div class="buscador">
-    <i class="fa-solid fa-magnifying-glass"></i>
+    <i aria-hidden="true" class="fa-solid fa-magnifying-glass"></i>
     <input class="input" placeholder="Buscar por placa…" (input)="buscar($any($event.target).value)" />
   </div>
   <div class="tabla-wrap">
@@ -34,10 +34,10 @@
             <td>
               <div class="acciones-fila">
                 <button class="btn btn-borde btn-sm" type="button" (click)="abrirFormulario(v)" [attr.aria-label]="'Editar ' + v.placa">
-                  <i class="fa-solid fa-pen"></i>
+                  <i aria-hidden="true" class="fa-solid fa-pen"></i>
                 </button>
                 <button class="btn btn-peligro btn-sm" type="button" (click)="eliminar(v)" [attr.aria-label]="'Eliminar ' + v.placa">
-                  <i class="fa-solid fa-trash"></i>
+                  <i aria-hidden="true" class="fa-solid fa-trash"></i>
                 </button>
               </div>
             </td>

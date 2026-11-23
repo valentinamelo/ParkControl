@@ -29,7 +29,7 @@
               <td>{{ t.tope_diario ? pesos(t.tope_diario) : 'Sin tope' }}</td>
               <td>
                 <button class="btn btn-borde btn-sm" type="button" (click)="abrirFormulario(t)">
-                  <i class="fa-solid fa-pen"></i>Cambiar
+                  <i aria-hidden="true" class="fa-solid fa-pen"></i>Cambiar
                 </button>
               </td>
             </tr>
@@ -42,7 +42,7 @@
               <td colspan="4" class="nota">Sin tarifa: no se podrá cobrar a este tipo de vehículo.</td>
               <td>
                 <button class="btn btn-primario btn-sm" type="button" (click)="abrirFormulario(null, tipo.id)">
-                  <i class="fa-solid fa-plus"></i>Crear
+                  <i aria-hidden="true" class="fa-solid fa-plus"></i>Crear
                 </button>
               </td>
             </tr>
@@ -87,7 +87,7 @@
             <td>
               <div class="acciones-fila">
                 <button class="btn btn-peligro btn-sm" type="button" (click)="eliminarTipo(t)" [attr.aria-label]="'Eliminar ' + t.nombre">
-                  <i class="fa-solid fa-trash"></i>
+                  <i aria-hidden="true" class="fa-solid fa-trash"></i>
                 </button>
               </div>
             </td>

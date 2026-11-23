@@ -1,0 +1,80 @@
+<form class="card" style="margin-bottom: 24px" [formGroup]="form" (ngSubmit)="buscar()">
+  <div class="filtros">
+    <div class="campo">
+      <label for="b-desde">Desde</label>
+      <input class="input" id="b-desde" type="date" formControlName="desde" />
+    </div>
+    <div class="campo">
+      <label for="b-hasta">Hasta</label>
+      <input class="input" id="b-hasta" type="date" formControlName="hasta" />
+    </div>
+    <div class="campo">
+      <label for="b-usuario">Usuario</label>
+      <select class="input" id="b-usuario" formControlName="usuario">
+        <option [ngValue]="null">Todos</option>
+        @for (u of usuarios(); track u.id) {
+          <option [ngValue]="u.id">{{ u.nombre || u.email }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo">
+      <label for="b-accion">Acción</label>
+      <select class="input" id="b-accion" formControlName="accion">
+        <option value="">Todas</option>
+        @for (a of acciones(); track a) {
+          <option [value]="a">{{ accionLegible(a) }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo">
+      <label for="b-q">Detalle contiene</label>
+      <input class="input" id="b-q" formControlName="q" placeholder="Placa, tiquete…" />
+    </div>
+  </div>
+  <div class="acciones">
+    <button class="btn btn-borde" type="button" (click)="limpiar()">Limpiar</button>
+    <button class="btn btn-primario" type="submit" [disabled]="cargando()">
+      <i aria-hidden="true" class="fa-solid fa-magnifying-glass"></i>Buscar
+    </button>
+  </div>
+</form>
+
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+
+<section class="card">
+  <h2>Registros ({{ total() }})</h2>
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr>
+      </thead>
+      <tbody>
+        @for (r of registros(); track r.id) {
+          <tr>
+            <td style="white-space: nowrap">{{ r.fecha | date: 'dd/MM/yy hh:mm a' }}</td>
+            <td><b>{{ r.usuario_nombre }}</b><br /><span class="nota">{{ r.usuario_rol }}</span></td>
+            <td><span class="accion">{{ accionLegible(r.accion) }}</span></td>
+            <td>{{ r.detalle }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="vacio">{{ cargando() ? 'Cargando…' : 'No hay registros con estos filtros.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (paginas() > 1) {
+    <div class="paginas">
+      <span class="nota">Página {{ pagina() }} de {{ paginas() }}</span>
+      <div class="fila">
+        <button class="btn btn-borde btn-sm" type="button" [disabled]="pagina() === 1 || cargando()" (click)="buscar(pagina() - 1)">
+          <i aria-hidden="true" class="fa-solid fa-chevron-left"></i>Anterior
+        </button>
+        <button class="btn btn-borde btn-sm" type="button" [disabled]="pagina() === paginas() || cargando()" (click)="buscar(pagina() + 1)">
+          Siguiente<i aria-hidden="true" class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+</section>

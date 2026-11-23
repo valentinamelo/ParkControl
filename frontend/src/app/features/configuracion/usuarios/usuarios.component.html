@@ -9,7 +9,7 @@
   <div class="encabezado" style="margin-bottom: 8px">
     <h2 style="margin: 0">Usuarios</h2>
     <button class="btn btn-primario btn-sm" type="button" (click)="abrirFormulario()">
-      <i class="fa-solid fa-user-plus"></i>Nuevo usuario
+      <i aria-hidden="true" class="fa-solid fa-user-plus"></i>Nuevo usuario
     </button>
   </div>
   <div class="tabla-wrap">
@@ -27,7 +27,7 @@
             <td>
               <div class="acciones-fila">
                 <button class="btn btn-borde btn-sm" type="button" (click)="abrirFormulario(u)" [attr.aria-label]="'Editar ' + u.email">
-                  <i class="fa-solid fa-pen"></i>
+                  <i aria-hidden="true" class="fa-solid fa-pen"></i>
                 </button>
                 @if (!esYo(u)) {
                   <button class="btn btn-sm" type="button" [class.btn-peligro]="u.is_active" [class.btn-borde]="!u.is_active" (click)="cambiarEstado(u)">

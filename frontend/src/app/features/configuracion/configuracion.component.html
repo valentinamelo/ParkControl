@@ -8,7 +8,7 @@
 
 <nav class="pestanas">
   @for (p of pestanas; track p.ruta) {
-    <a [routerLink]="p.ruta" routerLinkActive="activa"><i class="fa-solid" [class]="p.icono"></i>{{ p.texto }}</a>
+    <a [routerLink]="p.ruta" routerLinkActive="activa"><i aria-hidden="true" class="fa-solid" [class]="p.icono"></i>{{ p.texto }}</a>
   }
 </nav>
 
