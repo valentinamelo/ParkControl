@@ -1,14 +1,17 @@
 <header class="encabezado no-imprimir">
   <div>
-    <a class="volver" routerLink="/movimientos"><i class="fa-solid fa-arrow-left"></i>Movimientos</a>
+    <a class="volver" routerLink="/movimientos"><i aria-hidden="true" class="fa-solid fa-arrow-left"></i>Movimientos</a>
     <h1>{{ tiquete()?.estado === 'ABIERTO' ? 'Tiquete de entrada' : 'Recibo' }}</h1>
   </div>
   <div class="fila">
+    @if (auth.esAdmin() && tiquete() && tiquete()!.estado !== 'ANULADO') {
+      <button class="btn btn-peligro" type="button" (click)="abrirAnulacion()"><i aria-hidden="true" class="fa-solid fa-ban"></i>Anular</button>
+    }
     @if (nuevo()) {
-      <a class="btn btn-borde" routerLink="/movimientos/entrada"><i class="fa-solid fa-plus"></i>Otra entrada</a>
+      <a class="btn btn-borde" routerLink="/movimientos/entrada"><i aria-hidden="true" class="fa-solid fa-plus"></i>Otra entrada</a>
     }
     <button class="btn btn-primario" type="button" (click)="imprimir()" [disabled]="!tiquete()">
-      <i class="fa-solid fa-print"></i>Imprimir
+      <i aria-hidden="true" class="fa-solid fa-print"></i>Imprimir
     </button>
   </div>
 </header>
@@ -18,6 +21,12 @@
 }
 @if (error()) {
   <div class="alerta">{{ error() }}</div>
+}
+@if (aviso()) {
+  <div class="exito no-imprimir">{{ aviso() }}</div>
+}
+@if (tiquete()?.estado === 'ANULADO') {
+  <div class="alerta">Tiquete anulado. Motivo: {{ tiquete()!.motivo_anulacion }}</div>
 }
 
 @if (tiquete(); as t) {
@@ -58,4 +67,33 @@
   </article>
 } @else if (!error()) {
   <p class="nota">Cargando tiquete…</p>
+}
+
+@if (modalAnular()) {
+  <app-modal [titulo]="'Anular tiquete ' + tiquete()?.codigo" (cerrar)="modalAnular.set(false)">
+    <form (ngSubmit)="anular()">
+      @if (errorAnular()) {
+        <div class="alerta">{{ errorAnular() }}</div>
+      }
+      <p class="info">
+        @if (tiquete()?.estado === 'ABIERTO') {
+          El vehículo queda fuera del sistema y el espacio {{ tiquete()?.espacio }} se libera.
+        } @else {
+          El cobro de {{ pesos(tiquete()?.valor) }} deja de contar en los ingresos y reportes.
+        }
+        Queda registrado en la bitácora.
+      </p>
+      <div class="campo">
+        <label for="motivo">Motivo (obligatorio)</label>
+        <textarea class="input" id="motivo" name="motivo" rows="3" [(ngModel)]="motivo" required minlength="5"
+                  placeholder="Ej.: la entrada se registró con la placa equivocada"></textarea>
+      </div>
+      <div class="acciones">
+        <button class="btn btn-borde" type="button" (click)="modalAnular.set(false)">Cancelar</button>
+        <button class="btn btn-oscuro" type="submit" [disabled]="anulando() || motivo.trim().length < 5">
+          {{ anulando() ? 'Anulando…' : 'Anular tiquete' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
 }

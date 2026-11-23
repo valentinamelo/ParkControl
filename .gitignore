@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 venv/
 backend/db.sqlite3
+backend/staticfiles/
 
 # Angular
 frontend/node_modules/
@@ -12,3 +13,8 @@ frontend/.angular/
 
 # Sistema
 .DS_Store
+
+# Pruebas e2e
+e2e/node_modules/
+e2e/test-results/
+e2e/playwright-report/

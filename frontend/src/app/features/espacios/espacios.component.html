@@ -2,7 +2,7 @@
   <h1>Espacios del parqueadero</h1>
   @if (auth.esAdmin()) {
     <button class="btn btn-oscuro" type="button" (click)="abrirLote()">
-      <i class="fa-solid fa-plus"></i>Agregar espacios
+      <i aria-hidden="true" class="fa-solid fa-plus"></i>Agregar espacios
     </button>
   }
 </header>
@@ -15,9 +15,9 @@
 }
 
 <div class="leyenda">
-  <span><i class="punto ocupado"></i>Ocupado</span>
-  <span><i class="punto"></i>Disponible</span>
-  <span><i class="punto inactivo"></i>Inactivo</span>
+  <span><i aria-hidden="true" class="punto ocupado"></i>Ocupado</span>
+  <span><i aria-hidden="true" class="punto"></i>Disponible</span>
+  <span><i aria-hidden="true" class="punto inactivo"></i>Inactivo</span>
 </div>
 
 <div class="grid-2">
@@ -61,10 +61,10 @@
           } @else {
             <div class="acciones">
               <button class="btn btn-peligro btn-sm" type="button" (click)="eliminar(e)">
-                <i class="fa-solid fa-trash"></i>Eliminar
+                <i aria-hidden="true" class="fa-solid fa-trash"></i>Eliminar
               </button>
               <button class="btn btn-borde btn-sm" type="button" (click)="cambiarEstado(e)">
-                <i class="fa-solid" [class.fa-ban]="e.estado !== 'INACTIVO'" [class.fa-check]="e.estado === 'INACTIVO'"></i>
+                <i aria-hidden="true" class="fa-solid" [class.fa-ban]="e.estado !== 'INACTIVO'" [class.fa-check]="e.estado === 'INACTIVO'"></i>
                 {{ e.estado === 'INACTIVO' ? 'Activar' : 'Desactivar' }}
               </button>
             </div>
@@ -97,7 +97,7 @@
                 <td>
                   @if (z.total_espacios === 0) {
                     <button class="btn btn-peligro btn-sm" type="button" (click)="eliminarZona(z)" [attr.aria-label]="'Eliminar zona ' + z.nombre">
-                      <i class="fa-solid fa-trash"></i>
+                      <i aria-hidden="true" class="fa-solid fa-trash"></i>
                     </button>
                   }
                 </td>

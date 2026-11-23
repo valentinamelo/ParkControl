@@ -11,13 +11,14 @@ from apps.configuracion.models import Parqueadero
 from apps.espacios.models import Espacio
 from apps.mensualidades.reglas import espacios_reservados, mensualidad_vigente
 from apps.reportes.bitacora import registrar
+from apps.usuarios.permissions import EsAdministrador
 from apps.vehiculos.models import Vehiculo
 from apps.vehiculos.serializers import normalizar_placa
 from parkcontrol.excepciones import ReglaNegocio
 
 from .models import Pago, Tiquete
 from .reglas import calcular_valor, dentro_de_horario, minutos_entre, tarifa_vigente
-from .serializers import EntradaSerializer, SalidaSerializer, TiqueteSerializer
+from .serializers import AnulacionSerializer, EntradaSerializer, SalidaSerializer, TiqueteSerializer
 
 
 class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
@@ -27,6 +28,7 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
     GET  /api/tiquetes/{codigo}/?perdido=1  previsualiza el cobro (RF-14)
     POST /api/tiquetes/entrada/             registra la entrada (RF-11, RF-12, RF-18)
     POST /api/tiquetes/{codigo}/salida/     cobra y libera el espacio (RF-13, RF-15)
+    POST /api/tiquetes/{codigo}/anular/     solo admin, con motivo (RF-24)
     """
 
     serializer_class = TiqueteSerializer
@@ -231,6 +233,41 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
                 f"{tiquete.codigo} {tiquete.vehiculo.placa} ${cobro['total']}"
                 + (" (tiquete perdido)" if datos["tiquete_perdido"] else "")
                 + (" (mensualidad)" if tiquete.es_mensualidad else ""),
+            )
+
+        return Response(self.get_serializer(self.get_queryset().get(pk=tiquete.pk)).data)
+
+    # --- Anulación (RF-24) ---
+
+    @action(detail=True, methods=["post"], permission_classes=[EsAdministrador])
+    def anular(self, request, codigo=None):
+        """
+        Un tiquete abierto se anula y libera su espacio (p. ej. se registró por error).
+        Uno cerrado se anula para corregir un cobro: su pago deja de contar en los ingresos.
+        """
+        serializer = AnulacionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        motivo = serializer.validated_data["motivo"]
+
+        with transaction.atomic():
+            tiquete = get_object_or_404(
+                Tiquete.objects.select_for_update().select_related("vehiculo", "espacio"), codigo=codigo.strip().upper()
+            )
+            if tiquete.estado == Tiquete.Estado.ANULADO:
+                raise ReglaNegocio(f"El tiquete {tiquete.codigo} ya está anulado.")
+            estaba_abierto = tiquete.estado == Tiquete.Estado.ABIERTO
+            tiquete.estado = Tiquete.Estado.ANULADO
+            tiquete.motivo_anulacion = motivo
+            if estaba_abierto:
+                tiquete.fecha_salida = timezone.now()
+                tiquete.usuario_salida = request.user
+                if tiquete.espacio.estado == Espacio.Estado.OCUPADO:
+                    tiquete.espacio.estado = Espacio.Estado.DISPONIBLE
+                    tiquete.espacio.save(update_fields=["estado"])
+            tiquete.save()
+            registrar(
+                request.user, "ANULAR_TIQUETE",
+                f"{tiquete.codigo} {tiquete.vehiculo.placa} ({'abierto' if estaba_abierto else f'cerrado, ${tiquete.valor}'}): {motivo}",
             )
 
         return Response(self.get_serializer(self.get_queryset().get(pk=tiquete.pk)).data)

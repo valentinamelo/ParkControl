@@ -1,0 +1,117 @@
+<form class="card" style="margin-bottom: 24px" [formGroup]="form" (ngSubmit)="consultar()">
+  <div class="rapidos" role="group" aria-label="Rangos rápidos">
+    @for (r of rapidos; track r.clave) {
+      <button class="btn btn-sm" type="button" [class.btn-oscuro]="rangoActivo() === r.clave" [class.btn-borde]="rangoActivo() !== r.clave"
+              [attr.aria-pressed]="rangoActivo() === r.clave" (click)="usarRango(r.clave)">
+        {{ r.texto }}
+      </button>
+    }
+  </div>
+  <div class="filtros">
+    <div class="campo">
+      <label for="desde">Desde</label>
+      <input class="input" id="desde" type="date" formControlName="desde" (change)="fechaManual()" />
+    </div>
+    <div class="campo">
+      <label for="hasta">Hasta</label>
+      <input class="input" id="hasta" type="date" formControlName="hasta" (change)="fechaManual()" />
+    </div>
+    <div class="campo">
+      <label for="tipo">Tipo de vehículo</label>
+      <select class="input" id="tipo" formControlName="tipo">
+        <option [ngValue]="null">Todos</option>
+        @for (t of tipos(); track t.id) {
+          <option [ngValue]="t.id">{{ t.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo">
+      <label for="metodo">Método de pago</label>
+      <select class="input" id="metodo" formControlName="metodo">
+        <option value="">Todos</option>
+        @for (m of metodos; track m.valor) {
+          <option [value]="m.valor">{{ m.texto }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo">
+      <label for="usuario">Trabajador</label>
+      <select class="input" id="usuario" formControlName="usuario">
+        <option [ngValue]="null">Todos</option>
+        @for (u of usuarios(); track u.id) {
+          <option [ngValue]="u.id">{{ u.nombre || u.email }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo">
+      <label for="concepto">Concepto</label>
+      <select class="input" id="concepto" formControlName="concepto">
+        <option value="">Todos</option>
+        <option value="PARQUEO">Parqueo</option>
+        <option value="MENSUALIDAD">Mensualidades</option>
+      </select>
+    </div>
+  </div>
+  <div class="acciones">
+    <button class="btn btn-borde" type="button" (click)="descargar('xlsx')" [disabled]="descargando() !== null">
+      <i aria-hidden="true" class="fa-solid fa-file-excel"></i>{{ descargando() === 'xlsx' ? 'Generando…' : 'Excel' }}
+    </button>
+    <button class="btn btn-borde" type="button" (click)="descargar('pdf')" [disabled]="descargando() !== null">
+      <i aria-hidden="true" class="fa-solid fa-file-pdf"></i>{{ descargando() === 'pdf' ? 'Generando…' : 'PDF' }}
+    </button>
+    <button class="btn btn-primario" type="submit" [disabled]="cargando()">
+      <i aria-hidden="true" class="fa-solid fa-magnifying-glass"></i>{{ cargando() ? 'Consultando…' : 'Consultar' }}
+    </button>
+  </div>
+</form>
+
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+
+@if (reporte(); as r) {
+  <div class="grid-3">
+    <app-stat-card icono="fa-sack-dollar" [valor]="pesos(r.total)" etiqueta="Total recaudado" />
+    <app-stat-card icono="fa-receipt" [valor]="r.cantidad" etiqueta="Pagos" />
+    <app-stat-card icono="fa-scale-balanced" [valor]="pesos(promedio(r))" etiqueta="Pago promedio" />
+  </div>
+
+  <section class="card" style="margin-bottom: 24px">
+    <h2>Ingresos por día <span class="nota">· {{ r.desde | date: 'dd/MM/yyyy' }} al {{ r.hasta | date: 'dd/MM/yyyy' }}</span></h2>
+    <app-columnas [dias]="r.por_dia" />
+  </section>
+
+  <div class="grid-desgloses">
+    <section class="card"><h2>Por método de pago</h2><app-barras [grupos]="r.por_metodo" /></section>
+    <section class="card"><h2>Por tipo de vehículo</h2><app-barras [grupos]="r.por_tipo" /></section>
+    <section class="card"><h2>Por trabajador</h2><app-barras [grupos]="r.por_usuario" /></section>
+    <section class="card"><h2>Por concepto</h2><app-barras [grupos]="r.por_concepto" /></section>
+  </div>
+
+  <section class="card">
+    <h2>Detalle de pagos ({{ r.detalle.length }})</h2>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr><th>Fecha</th><th>Concepto</th><th>Referencia</th><th>Placa</th><th>Tipo</th><th>Método</th><th>Registró</th><th class="valor">Valor</th></tr>
+        </thead>
+        <tbody>
+          @for (f of r.detalle; track $index) {
+            <tr>
+              <td>{{ f.fecha | date: 'dd/MM/yy hh:mm a' }}</td>
+              <td>{{ f.concepto }}</td>
+              <td>{{ f.referencia }}</td>
+              <td><b>{{ f.placa }}</b></td>
+              <td>{{ f.tipo_vehiculo }}</td>
+              <td>{{ f.metodo }}</td>
+              <td>{{ f.usuario }}</td>
+              <td class="valor">{{ pesos(f.valor) }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="vacio">No hay pagos con estos filtros.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}

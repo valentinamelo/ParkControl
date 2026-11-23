@@ -6,6 +6,11 @@ import { environment } from '../../environments/environment';
 import {
   Cliente,
   ConsultaPlaca,
+  DashboardResumen,
+  FiltrosReporte,
+  Pagina,
+  RegistroBitacora,
+  ReporteIngresos,
   EntradaForm,
   Espacio,
   Horario,
@@ -22,6 +27,24 @@ import {
   VentaMensualidad,
   Zona,
 } from './models';
+
+export interface FiltrosBitacora {
+  desde?: string;
+  hasta?: string;
+  usuario?: number | null;
+  accion?: string;
+  q?: string;
+  page?: number;
+}
+
+/** Filtros -> query string, omitiendo los vacíos. */
+function parametros(filtros: object): HttpParams {
+  let params = new HttpParams();
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== null && valor !== undefined && valor !== '') params = params.set(clave, String(valor));
+  }
+  return params;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -222,5 +245,34 @@ export class ApiService {
 
   renovarMensualidad(id: number, metodo: MetodoPago): Observable<Mensualidad> {
     return this.http.post<Mensualidad>(`${this.url}/mensualidades/${id}/renovar/`, { metodo });
+  }
+
+  /** Solo admin. Si el tiquete estaba abierto libera el espacio; si estaba cerrado, su pago deja de contar. */
+  anularTiquete(codigo: string, motivo: string): Observable<Tiquete> {
+    return this.http.post<Tiquete>(`${this.url}/tiquetes/${encodeURIComponent(codigo)}/anular/`, { motivo });
+  }
+
+  // --- Dashboard, reportes y bitácora ---
+
+  dashboard(): Observable<DashboardResumen> {
+    return this.http.get<DashboardResumen>(`${this.url}/dashboard/resumen/`);
+  }
+
+  reporteIngresos(filtros: FiltrosReporte): Observable<ReporteIngresos> {
+    return this.http.get<ReporteIngresos>(`${this.url}/reportes/ingresos/`, { params: parametros(filtros) });
+  }
+
+  /** PDF o Excel. Se pide como archivo (blob) para que el interceptor agregue el token. */
+  descargarReporte(filtros: FiltrosReporte, formato: 'pdf' | 'xlsx'): Observable<Blob> {
+    const params = parametros(filtros).set('formato', formato);
+    return this.http.get(`${this.url}/reportes/ingresos/`, { params, responseType: 'blob' });
+  }
+
+  bitacora(filtros: FiltrosBitacora): Observable<Pagina<RegistroBitacora>> {
+    return this.http.get<Pagina<RegistroBitacora>>(`${this.url}/bitacora/`, { params: parametros(filtros) });
+  }
+
+  accionesBitacora(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.url}/bitacora/acciones/`);
   }
 }

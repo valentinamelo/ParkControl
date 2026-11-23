@@ -1,6 +1,6 @@
 <header class="encabezado">
   <div>
-    <a class="volver" routerLink="/movimientos"><i class="fa-solid fa-arrow-left"></i>Movimientos</a>
+    <a class="volver" routerLink="/movimientos"><i aria-hidden="true" class="fa-solid fa-arrow-left"></i>Movimientos</a>
     <h1>Registrar entrada</h1>
   </div>
 </header>
@@ -42,7 +42,7 @@
       } @else {
         @if (c.mensualidad; as m) {
           <div class="exito">
-            <i class="fa-solid fa-id-card"></i>
+            <i aria-hidden="true" class="fa-solid fa-id-card"></i>
             Mensualidad vigente de <b>{{ m.cliente }}</b> hasta el {{ m.fecha_fin | date: 'dd/MM/yyyy' }}: no paga al salir.
             @if (m.espacio_fijo) { Espacio fijo: <b>{{ m.espacio_fijo }}</b>. }
           </div>
@@ -84,7 +84,7 @@
     <div class="acciones">
       <a class="btn btn-borde" routerLink="/movimientos">Cancelar</a>
       <button class="btn btn-primario" type="submit" [disabled]="guardando() || !consulta() || yaDentro() || !espacioElegido()">
-        <i class="fa-solid fa-ticket"></i>{{ guardando() ? 'Registrando…' : 'Registrar y generar tiquete' }}
+        <i aria-hidden="true" class="fa-solid fa-ticket"></i>{{ guardando() ? 'Registrando…' : 'Registrar y generar tiquete' }}
       </button>
     </div>
   </section>

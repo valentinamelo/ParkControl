@@ -9,7 +9,7 @@
   <div class="encabezado" style="margin-bottom: 8px">
     <h2 style="margin: 0">Planes de mensualidad</h2>
     <button class="btn btn-primario btn-sm" type="button" (click)="abrirFormulario()">
-      <i class="fa-solid fa-plus"></i>Nuevo plan
+      <i aria-hidden="true" class="fa-solid fa-plus"></i>Nuevo plan
     </button>
   </div>
   <div class="tabla-wrap">
@@ -28,7 +28,7 @@
             <td>
               <div class="acciones-fila">
                 <button class="btn btn-borde btn-sm" type="button" (click)="abrirFormulario(p)" [attr.aria-label]="'Editar ' + p.nombre">
-                  <i class="fa-solid fa-pen"></i>
+                  <i aria-hidden="true" class="fa-solid fa-pen"></i>
                 </button>
                 <button class="btn btn-sm" type="button" [class.btn-peligro]="p.activo" [class.btn-borde]="!p.activo" (click)="cambiarEstado(p)">
                   {{ p.activo ? 'Desactivar' : 'Activar' }}

@@ -141,6 +141,7 @@ export interface Tiquete {
   usuario_entrada: string;
   usuario_salida: string | null;
   metodo_pago: string | null;
+  motivo_anulacion: string;
   /** Solo en tiquetes/activos/ */
   valor_actual?: number;
   /** Solo en tiquetes/{codigo}/ si está abierto */
@@ -227,4 +228,92 @@ export interface VentaMensualidad {
   espacio_fijo: number | null;
   fecha_inicio: string;
   metodo: MetodoPago;
+}
+
+/** Total y cantidad de pagos de un grupo (método, tipo, trabajador...). */
+export interface GrupoIngresos {
+  nombre: string;
+  total: number;
+  cantidad: number;
+}
+
+export interface IngresoDia {
+  fecha: string;
+  total: number;
+  cantidad: number;
+}
+
+export interface DashboardResumen {
+  /** "turno" para el trabajador: solo lo que él registró hoy. */
+  alcance: 'parqueadero' | 'turno';
+  fecha: string;
+  espacios: {
+    total: number;
+    ocupados: number;
+    disponibles: number;
+    inactivos: number;
+    ocupacion: number;
+    por_tipo: { tipo: string; total: number; ocupados: number; disponibles: number }[];
+  };
+  hoy: {
+    ingresos: number;
+    pagos: number;
+    por_metodo: GrupoIngresos[];
+    por_concepto: GrupoIngresos[];
+    entradas: number;
+    salidas: number;
+  };
+  /** Solo para el administrador */
+  semana?: IngresoDia[];
+  mensualidades?: { vigentes: number; por_vencer: number };
+}
+
+export interface FiltrosReporte {
+  desde: string;
+  hasta: string;
+  tipo?: number | null;
+  metodo?: MetodoPago | '';
+  usuario?: number | null;
+  concepto?: 'PARQUEO' | 'MENSUALIDAD' | '';
+}
+
+export interface FilaReporte {
+  fecha: string;
+  concepto: string;
+  referencia: string;
+  placa: string;
+  tipo_vehiculo: string;
+  metodo: string;
+  usuario: string;
+  valor: number;
+}
+
+export interface ReporteIngresos {
+  desde: string;
+  hasta: string;
+  total: number;
+  cantidad: number;
+  por_dia: IngresoDia[];
+  por_tipo: GrupoIngresos[];
+  por_metodo: GrupoIngresos[];
+  por_usuario: GrupoIngresos[];
+  por_concepto: GrupoIngresos[];
+  detalle: FilaReporte[];
+}
+
+export interface RegistroBitacora {
+  id: number;
+  fecha: string;
+  usuario: number;
+  usuario_nombre: string;
+  usuario_rol: string;
+  accion: string;
+  detalle: string;
+}
+
+export interface Pagina<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 }
