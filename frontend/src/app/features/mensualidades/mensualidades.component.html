@@ -1,0 +1,180 @@
+<header class="encabezado">
+  <div>
+    <h1>Mensualidades</h1>
+    <p>Clientes frecuentes: no pagan al salir mientras su mensualidad esté vigente.</p>
+  </div>
+  <button class="btn btn-primario" type="button" (click)="abrirVenta()" [disabled]="!planes().length">
+    <i class="fa-solid fa-plus"></i>Vender mensualidad
+  </button>
+</header>
+
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+@if (aviso()) {
+  <div class="exito">{{ aviso() }}</div>
+}
+
+<div class="card">
+  <div class="encabezado" style="margin-bottom: 12px">
+    <div class="buscador" style="margin: 0; flex: 1">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input class="input" placeholder="Placa, cliente o documento…" (input)="buscar($any($event.target).value)" />
+    </div>
+    <div class="fila" role="group" aria-label="Estado">
+      @for (f of filtros; track f.valor) {
+        <button class="btn btn-sm" type="button" [class.btn-oscuro]="filtro() === f.valor" [class.btn-borde]="filtro() !== f.valor"
+                [attr.aria-pressed]="filtro() === f.valor" (click)="cambiarFiltro(f.valor)">
+          {{ f.texto }}
+        </button>
+      }
+    </div>
+  </div>
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr><th>Placa</th><th>Cliente</th><th>Plan</th><th>Espacio fijo</th><th>Vigencia</th><th>Estado</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (m of mensualidades(); track m.id) {
+          <tr [class.inactivo]="m.estado === 'VENCIDA'">
+            <td><b>{{ m.placa }}</b><br /><span class="nota">{{ m.tipo_vehiculo }}</span></td>
+            <td>{{ m.cliente_nombre }}<br /><span class="nota">{{ m.cliente_documento }}</span></td>
+            <td>{{ m.plan_nombre }}<br /><span class="nota">{{ pesos(m.valor_pagado) }}</span></td>
+            <td>{{ m.espacio_fijo_codigo ?? '—' }}</td>
+            <td>{{ fecha(m.fecha_inicio) }} – {{ fecha(m.fecha_fin) }}</td>
+            <td>
+              @if (m.estado === 'VIGENTE') {
+                <span class="badge">{{ m.fecha_inicio > hoy ? 'Empieza el ' + fecha(m.fecha_inicio) : m.dias_restantes + ' días' }}</span>
+              } @else {
+                <span class="badge badge-claro">Vencida</span>
+              }
+            </td>
+            <td>
+              <button class="btn btn-borde btn-sm" type="button" (click)="abrirRenovacion(m)">
+                <i class="fa-solid fa-rotate-right"></i>Renovar
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="vacio">{{ cargando() ? 'Cargando…' : 'No hay mensualidades.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (modalVenta()) {
+  <app-modal titulo="Vender mensualidad" (cerrar)="modalVenta.set(false)">
+    <form [formGroup]="form" (ngSubmit)="vender()">
+      @if (errorForm()) {
+        <div class="alerta">{{ errorForm() }}</div>
+      }
+      <h3 class="subtitulo">Cliente</h3>
+      <div class="campos-2">
+        <div class="campo">
+          <label for="documento">Documento</label>
+          <input class="input" id="documento" formControlName="documento" autocomplete="off" [class.invalido]="errorDe('documento')" />
+          @if (errorDe('documento')) { <small class="error">{{ errorDe('documento') }}</small> }
+          @else if (clienteExistente()) { <small class="nota">Cliente registrado.</small> }
+        </div>
+        <div class="campo">
+          <label for="nombre">Nombre</label>
+          <input class="input" id="nombre" formControlName="nombre" [class.invalido]="errorDe('nombre')" />
+          @if (errorDe('nombre')) { <small class="error">{{ errorDe('nombre') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="telefono">Teléfono</label>
+          <input class="input" id="telefono" formControlName="telefono" />
+        </div>
+        <div class="campo">
+          <label for="correo">Correo</label>
+          <input class="input" id="correo" type="email" formControlName="correo" [class.invalido]="errorDe('correo')" />
+          @if (errorDe('correo')) { <small class="error">{{ errorDe('correo') }}</small> }
+        </div>
+      </div>
+
+      <h3 class="subtitulo">Vehículo y plan</h3>
+      <div class="campos-2">
+        <div class="campo">
+          <label for="placa">Placa</label>
+          <input class="input" id="placa" formControlName="placa" placeholder="ABC123" [class.invalido]="errorDe('placa')" />
+          @if (errorDe('placa')) { <small class="error">{{ errorDe('placa') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="plan">Plan</label>
+          <select class="input" id="plan" formControlName="plan" [class.invalido]="errorDe('plan')">
+            @for (p of planes(); track p.id) {
+              <option [ngValue]="p.id">{{ p.nombre }} · {{ pesos(p.valor) }}</option>
+            }
+          </select>
+          @if (errorDe('plan')) { <small class="error">{{ errorDe('plan') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="inicio">Desde</label>
+          <input class="input" id="inicio" type="date" [min]="hoy" formControlName="fecha_inicio" [class.invalido]="errorDe('fecha_inicio')" />
+          @if (errorDe('fecha_inicio')) { <small class="error">{{ errorDe('fecha_inicio') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="espacio">Espacio fijo (opcional)</label>
+          <select class="input" id="espacio" formControlName="espacio_fijo" [class.invalido]="errorDe('espacio_fijo')">
+            <option [ngValue]="null">Sin espacio fijo</option>
+            @for (e of espaciosPlan(); track e.id) {
+              <option [ngValue]="e.id">{{ e.codigo }}</option>
+            }
+          </select>
+          @if (errorDe('espacio_fijo')) { <small class="error">{{ errorDe('espacio_fijo') }}</small> }
+        </div>
+      </div>
+
+      <p class="etiqueta">Método de pago</p>
+      <div class="fila" style="margin-bottom: 14px">
+        @for (m of metodos; track m.valor) {
+          <label class="check"><input type="radio" formControlName="metodo" [value]="m.valor" />{{ m.texto }}</label>
+        }
+      </div>
+
+      @if (planElegido(); as plan) {
+        <p class="info">
+          Total: <b>{{ pesos(plan.valor) }}</b> por {{ plan.dias }} días
+          @if (finVenta(); as fin) { · vigente hasta el <b>{{ fin | date: 'dd/MM/yyyy' }}</b> }
+        </p>
+      }
+      <div class="acciones">
+        <button class="btn btn-borde" type="button" (click)="modalVenta.set(false)">Cancelar</button>
+        <button class="btn btn-primario" type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Cobrar y vender' }}</button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (renovando(); as m) {
+  <app-modal [titulo]="'Renovar mensualidad de ' + m.placa" (cerrar)="renovando.set(null)">
+    @if (errorForm()) {
+      <div class="alerta">{{ errorForm() }}</div>
+    }
+    <p class="info">
+      {{ m.cliente_nombre }} · {{ m.plan_nombre }}.
+      @if (m.estado === 'VIGENTE') {
+        La renovación empieza el día siguiente al {{ fecha(m.fecha_fin) }}.
+      } @else {
+        Venció el {{ fecha(m.fecha_fin) }}: la renovación empieza hoy.
+      }
+    </p>
+    <p class="etiqueta">Método de pago</p>
+    <div class="fila" style="margin-bottom: 14px" role="radiogroup" aria-label="Método de pago">
+      @for (metodo of metodos; track metodo.valor) {
+        <label class="check">
+          <input type="radio" name="metodo-renovacion" [checked]="metodoRenovacion() === metodo.valor" (change)="metodoRenovacion.set(metodo.valor)" />
+          {{ metodo.texto }}
+        </label>
+      }
+    </div>
+    <div class="acciones">
+      <button class="btn btn-borde" type="button" (click)="renovando.set(null)">Cancelar</button>
+      <button class="btn btn-primario" type="button" (click)="renovar()" [disabled]="guardando()">
+        {{ guardando() ? 'Renovando…' : 'Cobrar y renovar' }}
+      </button>
+    </div>
+  </app-modal>
+}

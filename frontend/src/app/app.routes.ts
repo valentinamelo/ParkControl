@@ -26,6 +26,25 @@ export const routes: Routes = [
           import('./features/movimientos/movimientos.component').then((m) => m.MovimientosComponent),
       },
       {
+        path: 'movimientos/entrada',
+        loadComponent: () =>
+          import('./features/movimientos/entrada/entrada.component').then((m) => m.EntradaComponent),
+      },
+      {
+        path: 'movimientos/salida',
+        loadComponent: () => import('./features/movimientos/salida/salida.component').then((m) => m.SalidaComponent),
+      },
+      {
+        path: 'movimientos/tiquete/:codigo',
+        loadComponent: () =>
+          import('./features/movimientos/tiquete/tiquete.component').then((m) => m.TiqueteComponent),
+      },
+      {
+        path: 'mensualidades',
+        loadComponent: () =>
+          import('./features/mensualidades/mensualidades.component').then((m) => m.MensualidadesComponent),
+      },
+      {
         path: 'espacios',
         loadComponent: () => import('./features/espacios/espacios.component').then((m) => m.EspaciosComponent),
       },
@@ -59,6 +78,11 @@ export const routes: Routes = [
             path: 'parqueadero',
             loadComponent: () =>
               import('./features/configuracion/parqueadero/parqueadero.component').then((m) => m.ParqueaderoComponent),
+          },
+          {
+            path: 'planes',
+            loadComponent: () =>
+              import('./features/configuracion/planes/planes.component').then((m) => m.PlanesComponent),
           },
           { path: '', pathMatch: 'full', redirectTo: 'tarifas' },
         ],

@@ -15,6 +15,13 @@ class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
         fields = ["id", "nombre", "documento", "telefono", "correo"]
+        extra_kwargs = {"documento": {"validators": []}}  # se valida en validate_documento
+
+    def validate_documento(self, valor):
+        valor = valor.strip()
+        if Cliente.objects.filter(documento=valor).exclude(pk=getattr(self.instance, "pk", None)).exists():
+            raise serializers.ValidationError("Ya existe un cliente con este documento.")
+        return valor
 
 
 class VehiculoSerializer(serializers.ModelSerializer):

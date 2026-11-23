@@ -1,42 +1,68 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import { EMPTY, Subject, catchError, merge, switchMap, timer } from 'rxjs';
 
 import { ApiService } from '../../core/api.service';
-import { duracion } from '../../core/formato';
-import { Espacio } from '../../core/models';
+import { mensajeError } from '../../core/errores';
+import { duracion, pesos } from '../../core/formato';
+import { Tiquete } from '../../core/models';
+
+/** Cada cuánto se actualiza la lista de vehículos dentro (la planeación pide 10–15 s). */
+export const INTERVALO_ACTUALIZACION = 15_000;
 
 @Component({
   selector: 'app-movimientos',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './movimientos.component.html',
 })
 export class MovimientosComponent implements OnInit {
   private api = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
+  private recargar$ = new Subject<void>();
 
-  protected ocupados = signal<Espacio[]>([]);
+  protected activos = signal<Tiquete[]>([]);
+  protected recientes = signal<Tiquete[]>([]);
+  protected disponibles = signal(0);
   protected cargando = signal(true);
   protected error = signal('');
   protected duracion = duracion;
-  protected disponibles = signal(0);
+  protected pesos = pesos;
 
-  protected total = computed(() => this.ocupados().length);
+  protected total = computed(() => this.activos().length);
 
   ngOnInit(): void {
-    this.cargar();
+    // Carga al entrar, cada 15 s y cuando se pulsa "Actualizar"
+    merge(timer(0, INTERVALO_ACTUALIZACION), this.recargar$)
+      .pipe(
+        // Si una consulta falla se muestra el error, pero se sigue intentando en la siguiente vuelta
+        switchMap(() =>
+          this.api.tiquetesActivos().pipe(
+            catchError((e: HttpErrorResponse) => {
+              this.error.set(mensajeError(e));
+              this.cargando.set(false);
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((t) => {
+        this.activos.set(t);
+        this.cargando.set(false);
+        this.error.set('');
+        this.cargarResumen();
+      });
   }
 
   cargar(): void {
-    this.cargando.set(true);
-    this.api.espacios({ estado: 'OCUPADO' }).subscribe({
-      next: (e) => {
-        this.ocupados.set(e);
-        this.cargando.set(false);
-      },
-      error: () => {
-        this.error.set('No se pudieron cargar los movimientos.');
-        this.cargando.set(false);
-      },
-    });
+    this.recargar$.next();
+  }
+
+  private cargarResumen(): void {
     this.api.espacios({ estado: 'DISPONIBLE' }).subscribe((e) => this.disponibles.set(e.length));
+    this.api.tiquetes({ estado: 'CERRADO' }).subscribe((t) => this.recientes.set(t.slice(0, 8)));
   }
 }

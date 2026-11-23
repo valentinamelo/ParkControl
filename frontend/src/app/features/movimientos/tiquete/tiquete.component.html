@@ -1,0 +1,61 @@
+<header class="encabezado no-imprimir">
+  <div>
+    <a class="volver" routerLink="/movimientos"><i class="fa-solid fa-arrow-left"></i>Movimientos</a>
+    <h1>{{ tiquete()?.estado === 'ABIERTO' ? 'Tiquete de entrada' : 'Recibo' }}</h1>
+  </div>
+  <div class="fila">
+    @if (nuevo()) {
+      <a class="btn btn-borde" routerLink="/movimientos/entrada"><i class="fa-solid fa-plus"></i>Otra entrada</a>
+    }
+    <button class="btn btn-primario" type="button" (click)="imprimir()" [disabled]="!tiquete()">
+      <i class="fa-solid fa-print"></i>Imprimir
+    </button>
+  </div>
+</header>
+
+@if (nuevo() && tiquete()) {
+  <div class="exito no-imprimir">Entrada registrada. Imprime el tiquete y entrégalo al conductor.</div>
+}
+@if (error()) {
+  <div class="alerta">{{ error() }}</div>
+}
+
+@if (tiquete(); as t) {
+  <article class="papel">
+    <header class="centro">
+      <b class="nombre">{{ parqueadero()?.nombre ?? 'ParkControl' }}</b>
+      @if (parqueadero()?.nit) { <span>NIT {{ parqueadero()?.nit }}</span> }
+      @if (parqueadero()?.direccion) { <span>{{ parqueadero()?.direccion }}</span> }
+      @if (parqueadero()?.telefono) { <span>Tel. {{ parqueadero()?.telefono }}</span> }
+    </header>
+
+    <hr />
+    <p class="placa centro">{{ t.placa }}</p>
+    <dl>
+      <div><dt>Tipo</dt><dd>{{ t.tipo_vehiculo }}</dd></div>
+      <div><dt>Espacio</dt><dd>{{ t.espacio }}</dd></div>
+      <div><dt>Entrada</dt><dd>{{ t.fecha_entrada | date: 'dd/MM/yyyy hh:mm a' }}</dd></div>
+      <div><dt>Atendió</dt><dd>{{ t.usuario_entrada }}</dd></div>
+      @if (t.es_mensualidad) { <div><dt>Mensualidad</dt><dd>Sí, sin cobro</dd></div> }
+
+      @if (t.estado !== 'ABIERTO') {
+        <div><dt>Salida</dt><dd>{{ t.fecha_salida | date: 'dd/MM/yyyy hh:mm a' }}</dd></div>
+        <div><dt>Tiempo</dt><dd>{{ duracion(t.minutos ?? 0) }}</dd></div>
+        @if (t.multa !== '0') { <div><dt>Multa</dt><dd>{{ pesos(t.multa) }}</dd></div> }
+        <div class="total"><dt>Total</dt><dd>{{ pesos(t.valor) }}</dd></div>
+        @if (t.metodo_pago) { <div><dt>Pago</dt><dd>{{ t.metodo_pago }}</dd></div> }
+        <div><dt>Estado</dt><dd>{{ t.estado_display }}</dd></div>
+      }
+    </dl>
+
+    @if (t.estado === 'ABIERTO') {
+      <hr />
+      <app-codigo-barras [valor]="t.codigo" />
+      <p class="pie centro">Conserve este tiquete: se escanea a la salida.<br />El tiquete perdido tiene multa.</p>
+    } @else {
+      <p class="pie centro">{{ t.codigo }} · Gracias por su visita</p>
+    }
+  </article>
+} @else if (!error()) {
+  <p class="nota">Cargando tiquete…</p>
+}

@@ -1,0 +1,103 @@
+<header class="encabezado">
+  <div>
+    <a class="volver" routerLink="/movimientos"><i class="fa-solid fa-arrow-left"></i>Movimientos</a>
+    <h1>Registrar salida</h1>
+  </div>
+</header>
+
+@if (ultimaSalida(); as s) {
+  <div class="exito">
+    <i class="fa-solid fa-circle-check"></i>
+    Salida de <b>{{ s.placa }}</b> registrada ({{ s.codigo }}, {{ duracion(s.minutos ?? 0) }}):
+    <b>{{ s.es_mensualidad ? 'mensualidad, sin cobro' : pesos(s.valor) }}</b>
+    @if (s.metodo_pago) { · {{ s.metodo_pago }} }
+    · <a class="enlace-tabla" [routerLink]="['/movimientos/tiquete', s.codigo]">Ver recibo</a>
+  </div>
+}
+
+<div class="grid-2">
+  <section class="card">
+    <form (ngSubmit)="buscar()">
+      <label class="etiqueta" for="campo">Escanea el tiquete o digita el código</label>
+      <div class="lector">
+        <i class="fa-solid fa-barcode"></i>
+        <input #campo class="input" id="campo" name="codigo" [(ngModel)]="texto" placeholder="PC-000123 o placa"
+               autocomplete="off" autofocus />
+        <button class="btn btn-oscuro" type="submit" [disabled]="buscando()">Buscar</button>
+        <button class="btn btn-borde" type="button" (click)="camara.set(true)" aria-label="Escanear con la cámara">
+          <i class="fa-solid fa-camera"></i>
+        </button>
+      </div>
+      <p class="nota">Con el lector USB basta con escanear: el código se busca solo. ¿Tiquete perdido? Escribe la placa.</p>
+    </form>
+
+    @if (error()) {
+      <div class="alerta" style="margin-top: 16px">{{ error() }}</div>
+    }
+    @if (buscando()) {
+      <p class="nota" style="margin-top: 16px">Buscando…</p>
+    }
+
+    @if (tiquete(); as t) {
+      <dl class="datos">
+        <div><dt>Placa</dt><dd class="grande">{{ t.placa }}</dd></div>
+        <div><dt>Tiquete</dt><dd>{{ t.codigo }}</dd></div>
+        <div><dt>Tipo</dt><dd>{{ t.tipo_vehiculo }}</dd></div>
+        <div><dt>Espacio</dt><dd>{{ t.espacio }}</dd></div>
+        <div><dt>Entrada</dt><dd>{{ t.fecha_entrada | date: 'dd/MM/yyyy hh:mm a' }}</dd></div>
+        <div><dt>Tiempo</dt><dd>{{ duracion(t.cobro?.minutos ?? 0) }}</dd></div>
+      </dl>
+    }
+  </section>
+
+  <section class="card">
+    <h2>Cobro</h2>
+    @if (tiquete(); as t) {
+      @if (t.cobro; as c) {
+        @if (t.es_mensualidad) {
+          <div class="exito">Mensualidad vigente: no se cobra el tiempo.</div>
+        } @else if (c.tarifa) {
+          <p class="nota" style="margin-bottom: 12px">Tarifa: {{ c.tarifa }}</p>
+        }
+
+        <label class="check" style="margin-bottom: 14px">
+          <input type="checkbox" [checked]="perdido()" (change)="cambiarPerdido($any($event.target).checked)" />
+          Tiquete perdido (se suma la multa)
+        </label>
+
+        <dl class="cuenta">
+          <div><dt>Tiempo</dt><dd>{{ pesos(c.valor) }}</dd></div>
+          @if (c.multa) { <div><dt>Multa por tiquete perdido</dt><dd>{{ pesos(c.multa) }}</dd></div> }
+          <div class="total"><dt>Total a pagar</dt><dd>{{ pesos(c.total) }}</dd></div>
+        </dl>
+
+        @if (c.total > 0) {
+          <p class="etiqueta">Método de pago</p>
+          <div class="metodos" role="radiogroup" aria-label="Método de pago">
+            @for (m of metodos; track m.valor) {
+              <button type="button" class="metodo" role="radio" [attr.aria-checked]="metodo() === m.valor"
+                      [class.elegido]="metodo() === m.valor" (click)="metodo.set(m.valor)">
+                <i class="fa-solid" [class]="m.icono"></i>{{ m.texto }}
+              </button>
+            }
+          </div>
+        }
+
+        <div class="acciones apiladas">
+          <button class="btn btn-borde" type="button" (click)="limpiar()">Cancelar</button>
+          <button class="btn btn-primario" type="button" (click)="confirmar()" [disabled]="guardando()">
+            {{ guardando() ? 'Registrando…' : (c.total > 0 ? 'Cobrar ' + pesos(c.total) + ' y dar salida' : 'Dar salida') }}
+          </button>
+        </div>
+      }
+    } @else {
+      <p class="nota">Busca un tiquete para ver cuánto debe pagar.</p>
+    }
+  </section>
+</div>
+
+@if (camara()) {
+  <app-modal titulo="Escanear con la cámara" (cerrar)="camara.set(false)">
+    <app-escaner (leido)="leidoPorCamara($event)" />
+  </app-modal>
+}
