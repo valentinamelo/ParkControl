@@ -96,6 +96,8 @@ export interface Zona {
   tipo_vehiculo: number;
   tipo_vehiculo_nombre: string;
   total_espacios: number;
+  espacios_ocupados: number;
+  espacios_inactivos: number;
 }
 
 /** Datos que el administrador envía al crear o editar un usuario. */
