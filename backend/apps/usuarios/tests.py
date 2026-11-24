@@ -41,6 +41,17 @@ class AvanceUnoTests(ApiTestBase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.data["usuario"]["rol"], "TRABAJADOR")
 
+    def test_usuarios_del_equipo(self):
+        for email, clave, rol in [
+            ("brayan@parkcontrol.com", "Brayan123*", "ADMIN"),
+            ("valentina@parkcontrol.com", "Valentina123*", "TRABAJADOR"),
+            ("laura@parkcontrol.com", "Laura123*", "TRABAJADOR"),
+        ]:
+            with self.subTest(email=email):
+                r = self.login(email, clave)
+                self.assertEqual(r.status_code, 200)
+                self.assertEqual(r.data["usuario"]["rol"], rol)
+
     def test_login_con_clave_incorrecta_falla(self):
         r = self.login("admin@parkcontrol.com", "otra")
         self.assertEqual(r.status_code, 401)
