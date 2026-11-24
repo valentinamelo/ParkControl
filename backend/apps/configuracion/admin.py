@@ -8,7 +8,7 @@ admin.site.register(TipoVehiculo)
 
 @admin.register(Tarifa)
 class TarifaAdmin(admin.ModelAdmin):
-    list_display = ["tipo_vehiculo", "modalidad", "valor", "minutos_fraccion", "minutos_gracia", "tope_diario", "vigente"]
+    list_display = ["tipo_vehiculo", "modalidad", "valor", "valor_primera_hora", "minutos_fraccion", "minutos_gracia", "tope_diario", "vigente"]
     list_filter = ["tipo_vehiculo", "vigente"]
 
 

@@ -24,7 +24,7 @@
             <tr>
               <td><b>{{ t.tipo_vehiculo_nombre }}</b></td>
               <td>{{ t.modalidad_display }}</td>
-              <td>{{ pesos(t.valor) }} / {{ t.minutos_fraccion }} min</td>
+              <td>{{ valorTarifa(t) }}</td>
               <td>{{ t.minutos_gracia }} min</td>
               <td>{{ t.tope_diario ? pesos(t.tope_diario) : 'Sin tope' }}</td>
               <td>{{ t.valor_pernoctacion ? pesos(t.valor_pernoctacion) + ' / noche' : 'No se cobra' }}</td>
@@ -65,7 +65,7 @@
                 <td>{{ t.creada | date: 'dd/MM/yyyy hh:mm a' }}</td>
                 <td>{{ t.tipo_vehiculo_nombre }}</td>
                 <td>{{ t.modalidad_display }}</td>
-                <td>{{ pesos(t.valor) }} / {{ t.minutos_fraccion }} min</td>
+                <td>{{ valorTarifa(t) }}</td>
                 <td>{{ t.minutos_gracia }} min</td>
                 <td>{{ t.tope_diario ? pesos(t.tope_diario) : 'Sin tope' }}</td>
                 <td>{{ t.valor_pernoctacion ? pesos(t.valor_pernoctacion) : '—' }}</td>
@@ -131,7 +131,15 @@
           @if (errorDe('minutos_fraccion')) { <small class="error">{{ errorDe('minutos_fraccion') }}</small> }
         </div>
         <div class="campo">
-          <label for="valor">Valor por {{ form.controls.modalidad.value === 'HORA' ? 'hora' : 'fracción' }} ($)</label>
+          <label for="primera-hora">Valor primera hora ($, opcional)</label>
+          <input class="input" id="primera-hora" type="number" min="1" step="100" formControlName="valor_primera_hora"
+                 [class.invalido]="errorDe('valor_primera_hora')" />
+          @if (errorDe('valor_primera_hora')) { <small class="error">{{ errorDe('valor_primera_hora') }}</small> }
+        </div>
+        <div class="campo">
+          <label for="valor">
+            Valor por {{ form.controls.modalidad.value === 'HORA' ? 'hora' : 'fracción' }}{{ form.controls.valor_primera_hora.value ? ' siguiente' : '' }} ($)
+          </label>
           <input class="input" id="valor" type="number" min="1" step="100" formControlName="valor" [class.invalido]="errorDe('valor')" />
           @if (errorDe('valor')) { <small class="error">{{ errorDe('valor') }}</small> }
         </div>
@@ -152,6 +160,10 @@
           @if (errorDe('valor_pernoctacion')) { <small class="error">{{ errorDe('valor_pernoctacion') }}</small> }
         </div>
       </div>
+      <p class="nota" style="margin-bottom: 12px">
+        Con valor de primera hora, la primera hora empezada cuesta ese valor y desde ahí se cobra cada hora o
+        fracción con el otro valor (por ejemplo, $5.000 la primera hora y $1.000 cada 15 minutos). Vacío: todas valen lo mismo.
+      </p>
       <p class="nota" style="margin-bottom: 12px">
         Con pernoctación, las horas se cobran solo dentro del horario de atención y cada noche que el vehículo
         pasa dentro con el parqueadero cerrado se cobra aparte. Vacío: se cobra el tiempo corrido.

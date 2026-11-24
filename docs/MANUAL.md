@@ -55,6 +55,8 @@ En lugar del código, escribe la **placa** y pulsa **Buscar**. ParkControl marca
 
 Se cobra cada hora (o fracción, según la tarifa) empezada. Por ejemplo, con $4.000 la hora, 2 horas y 45 minutos se cobran como 3 horas: **$12.000**. Si la tarifa tiene minutos de gracia y el vehículo sale antes de que terminen, no paga. El total de un día nunca pasa del tope diario.
 
+Si la tarifa tiene un **valor de primera hora**, esa hora cuesta distinto y lo demás se cobra con el valor normal. Por ejemplo, con $5.000 la primera hora y $1.000 cada 15 minutos, 1 hora y 20 minutos se cobran **$7.000** ($5.000 + 2 fracciones de $1.000).
+
 **Pernoctación:** si el vehículo se queda de noche (desde el cierre hasta la apertura), esas horas no se cobran por hora: se cobra el valor de pernoctación por cada noche, aparte de las horas que estuvo con el parqueadero abierto. Por ejemplo, con horario de 6:00 a 22:00, $4.000 la hora y $15.000 la noche, un carro que entra el lunes a las 20:00 y sale el martes a las 8:00 paga 4 horas ($16.000) más 1 noche ($15.000): **$31.000**. En la pantalla de salida aparecen las dos partes por separado.
 
 ---
@@ -98,7 +100,7 @@ Muestra la ocupación en tiempo real (en total y por tipo de vehículo), lo que 
 
 ### Configuración
 
-- **Tarifas:** pulsa **Cambiar** en la tarifa de un tipo de vehículo. Por hora o por fracción, con minutos de gracia, tope diario y, si quieres, el valor de **pernoctación** por noche (déjalo vacío si no se cobra). Al cambiarla se crea una tarifa nueva y la anterior queda en el **historial**: lo que ya se cobró no cambia. Aquí también se agregan tipos de vehículo (por ejemplo, bicicleta).
+- **Tarifas:** pulsa **Cambiar** en la tarifa de un tipo de vehículo. Por hora o por fracción, con un valor distinto para la primera hora si quieres, minutos de gracia, tope diario y, si quieres, el valor de **pernoctación** por noche (déjalo vacío si no se cobra). Al cambiarla se crea una tarifa nueva y la anterior queda en el **historial**: lo que ya se cobró no cambia. Aquí también se agregan tipos de vehículo (por ejemplo, bicicleta).
 - **Planes mensuales:** nombre, tipo de vehículo, días y valor. Un plan que ya se vendió no se borra: se desactiva para que no se venda más.
 - **Horarios:** marca los días que se abre y la hora de apertura y cierre. Pulsa **Guardar horario**. Fuera de este horario el trabajador no puede registrar entradas, y es el que define cuándo un vehículo pernocta.
 - **Usuarios:** crea trabajadores con su correo y una contraseña de al menos 8 caracteres. **Desactivar** impide que el usuario entre, sin borrar lo que registró.

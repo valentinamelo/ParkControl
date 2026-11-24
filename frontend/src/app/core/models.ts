@@ -56,6 +56,8 @@ export interface Tarifa {
   modalidad: 'HORA' | 'FRACCION';
   modalidad_display: string;
   valor: string;
+  /** Valor de la primera hora; las siguientes se cobran con `valor`. null: todas valen lo mismo. */
+  valor_primera_hora: string | null;
   minutos_fraccion: number;
   minutos_gracia: number;
   tope_diario: string | null;

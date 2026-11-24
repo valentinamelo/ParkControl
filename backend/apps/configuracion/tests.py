@@ -51,6 +51,17 @@ class ConfiguracionTests(ApiTestBase):
         self.assertIn("tope_diario", self.client.patch(f"/api/tarifas/{pk}/", {"tope_diario": 100}, format="json").data)
         r = self.client.patch(f"/api/tarifas/{pk}/", {"modalidad": "FRACCION", "minutos_fraccion": 0}, format="json")
         self.assertIn("minutos_fraccion", r.data)
+        self.assertIn("valor_primera_hora", self.client.patch(f"/api/tarifas/{pk}/", {"valor_primera_hora": 0}, format="json").data)
+        r = self.client.patch(f"/api/tarifas/{pk}/", {"valor_primera_hora": 40000}, format="json")
+        self.assertIn("tope_diario", r.data)  # el tope (30.000) no puede ser menor que la primera hora
+
+    def test_primera_hora_se_conserva_al_cambiar_otro_valor(self):
+        self.como_admin()
+        r = self.client.patch(f"/api/tarifas/{self.tarifa_carro().pk}/", {"valor_primera_hora": 5000}, format="json")
+        self.assertEqual(r.status_code, 200, r.data)
+        r = self.client.patch(f"/api/tarifas/{r.data['id']}/", {"valor": 3000}, format="json")
+        self.assertEqual(r.data["valor_primera_hora"], "5000")
+        self.assertEqual(self.tarifa_carro().valor_primera_hora, 5000)
 
     def test_tarifa_por_hora_siempre_es_de_60_minutos(self):
         self.como_admin()
