@@ -55,7 +55,7 @@ class TarifaViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         campos = [
-            "tipo_vehiculo", "modalidad", "valor", "minutos_fraccion", "minutos_gracia", "tope_diario",
+            "tipo_vehiculo", "modalidad", "valor", "valor_primera_hora", "minutos_fraccion", "minutos_gracia", "tope_diario",
             "valor_pernoctacion",
         ]
         datos = {campo: getattr(anterior, campo) for campo in campos}

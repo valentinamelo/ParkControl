@@ -142,6 +142,24 @@ test.describe('Administración (avances 2 y 4)', () => {
     await expect(page.getByRole('row', { name: /Carro/ }).first()).toContainText('$15.000 / noche');
   });
 
+  test('configura una primera hora con valor distinto y luego la quita', async ({ page }) => {
+    await iniciarSesion(page, ADMIN);
+    await page.goto('/configuracion/tarifas');
+    const filaMoto = page.getByRole('row', { name: /Moto/ }).first();
+    const cambiar = async (primeraHora: string) => {
+      await filaMoto.getByRole('button', { name: 'Cambiar' }).click();
+      const modal = page.getByRole('dialog');
+      await modal.getByLabel('Valor primera hora ($, opcional)').fill(primeraHora);
+      await modal.locator('#valor').fill('2000');
+      await modal.getByRole('button', { name: 'Guardar tarifa' }).click();
+      await expect(modal).toBeHidden();
+    };
+    await cambiar('3000');
+    await expect(filaMoto).toContainText('$3.000 primera hora, luego $2.000 / 60 min');
+    await cambiar(''); // se deja como estaba para las demás pruebas
+    await expect(filaMoto).not.toContainText('primera hora');
+  });
+
   test('crea espacios en lote en una zona nueva', async ({ page }) => {
     await iniciarSesion(page, ADMIN);
     await page.goto('/espacios');

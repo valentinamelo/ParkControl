@@ -30,7 +30,8 @@ class TarifaSerializer(serializers.ModelSerializer):
         model = Tarifa
         fields = [
             "id", "tipo_vehiculo", "tipo_vehiculo_nombre", "modalidad", "modalidad_display",
-            "valor", "minutos_fraccion", "minutos_gracia", "tope_diario", "valor_pernoctacion", "vigente", "creada",
+            "valor", "valor_primera_hora", "minutos_fraccion", "minutos_gracia", "tope_diario", "valor_pernoctacion",
+            "vigente", "creada",
         ]
         read_only_fields = ["vigente", "creada"]
 
@@ -45,9 +46,16 @@ class TarifaSerializer(serializers.ModelSerializer):
             attrs["minutos_fraccion"] = 60
         elif valor_de("minutos_fraccion", 0) < 1:
             raise serializers.ValidationError({"minutos_fraccion": "La fracción debe ser de al menos 1 minuto."})
+        primera_hora = valor_de("valor_primera_hora")
+        if primera_hora is not None and primera_hora <= 0:
+            raise serializers.ValidationError(
+                {"valor_primera_hora": "Debe ser mayor que cero. Déjalo vacío si todas las horas valen lo mismo."}
+            )
         tope = valor_de("tope_diario")
         if tope is not None and tope < valor_de("valor"):
             raise serializers.ValidationError({"tope_diario": "El tope diario no puede ser menor que el valor de una hora o fracción."})
+        if tope is not None and primera_hora is not None and tope < primera_hora:
+            raise serializers.ValidationError({"tope_diario": "El tope diario no puede ser menor que el valor de la primera hora."})
         pernoctacion = valor_de("valor_pernoctacion")
         if pernoctacion is not None and pernoctacion <= 0:
             raise serializers.ValidationError(

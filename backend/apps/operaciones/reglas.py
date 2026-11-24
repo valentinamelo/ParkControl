@@ -21,21 +21,27 @@ def calcular_valor(tarifa, minutos):
     """
     valor = min(⌈(minutos - gracia) / fracción⌉ × valor, tope_diario)
 
+    Con valor de primera hora, la primera hora empezada cuesta ese valor y el resto se cobra
+    por horas o fracciones: $5.000 la primera hora y $1.000 cada 15 minutos, 1 h 20 min -> $7.000.
+
     Si los minutos no superan la gracia, el valor es 0. Para estadías de más de un día,
-    cada día completo cobra el tope y el resto se calcula con la misma fórmula.
+    cada día completo cobra el tope y el resto se calcula con la misma fórmula (la primera hora
+    se cobra una sola vez, al inicio de la estadía).
     """
     if minutos <= tarifa.minutos_gracia:
         return 0
     cobrables = minutos - tarifa.minutos_gracia
 
-    def por_fracciones(m):
+    def por_tiempo(m, con_primera_hora):
+        if con_primera_hora and tarifa.valor_primera_hora:
+            return int(tarifa.valor_primera_hora) + por_tiempo(max(0, m - 60), False)
         return math.ceil(m / tarifa.minutos_fraccion) * int(tarifa.valor)
 
     if not tarifa.tope_diario:
-        return por_fracciones(cobrables)
+        return por_tiempo(cobrables, True)
     tope = int(tarifa.tope_diario)
     dias, resto = divmod(cobrables, MINUTOS_DIA)
-    return dias * tope + min(por_fracciones(resto), tope)
+    return dias * tope + min(por_tiempo(resto, dias == 0), tope)
 
 
 def tarifa_vigente(tipo_vehiculo):

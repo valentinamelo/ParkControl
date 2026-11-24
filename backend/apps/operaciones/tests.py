@@ -15,8 +15,9 @@ from .reglas import calcular_cobro, calcular_valor, minutos_entre
 CODIGO_ALEATORIO = rf"^[CM]-[{ALFABETO}]{{{LONGITUD}}}$"
 
 
-def tarifa(valor=4000, fraccion=60, gracia=0, tope=None):
-    return Tarifa(valor=valor, minutos_fraccion=fraccion, minutos_gracia=gracia, tope_diario=tope)
+def tarifa(valor=4000, fraccion=60, gracia=0, tope=None, primera_hora=None):
+    return Tarifa(valor=valor, minutos_fraccion=fraccion, minutos_gracia=gracia, tope_diario=tope,
+                  valor_primera_hora=primera_hora)
 
 
 class CalculoTarifaTests(SimpleTestCase):
@@ -56,6 +57,35 @@ class CalculoTarifaTests(SimpleTestCase):
         self.assertEqual(calcular_valor(t, 24 * 60), 30000)
         self.assertEqual(calcular_valor(t, 24 * 60 + 30), 34000)
         self.assertEqual(calcular_valor(t, 2 * 24 * 60 + 600), 90000)
+
+    def test_primera_hora_y_horas_siguientes(self):
+        # $5.000 la primera hora y $3.000 cada hora siguiente
+        t = tarifa(valor=3000, primera_hora=5000)
+        self.assertEqual(calcular_valor(t, 0), 0)
+        self.assertEqual(calcular_valor(t, 1), 5000)
+        self.assertEqual(calcular_valor(t, 60), 5000)
+        self.assertEqual(calcular_valor(t, 61), 8000)
+        self.assertEqual(calcular_valor(t, 165), 11000)  # 2 h 45 min: 5.000 + 2 × 3.000
+
+    def test_primera_hora_y_fracciones_siguientes(self):
+        # $5.000 la primera hora y $1.000 cada 15 minutos
+        t = tarifa(valor=1000, fraccion=15, primera_hora=5000)
+        self.assertEqual(calcular_valor(t, 60), 5000)
+        self.assertEqual(calcular_valor(t, 61), 6000)
+        self.assertEqual(calcular_valor(t, 80), 7000)  # 1 h 20 min: 5.000 + 2 fracciones
+
+    def test_primera_hora_con_gracia(self):
+        t = tarifa(valor=3000, gracia=10, primera_hora=5000)
+        self.assertEqual(calcular_valor(t, 10), 0)
+        self.assertEqual(calcular_valor(t, 70), 5000)  # 60 cobrables
+        self.assertEqual(calcular_valor(t, 71), 8000)
+
+    def test_primera_hora_con_tope_y_varios_dias(self):
+        t = tarifa(valor=3000, tope=30000, primera_hora=5000)
+        self.assertEqual(calcular_valor(t, 9 * 60), 29000)  # 5.000 + 8 × 3.000
+        self.assertEqual(calcular_valor(t, 10 * 60), 30000)
+        # La primera hora se cobra una sola vez: el segundo día empieza con horas normales
+        self.assertEqual(calcular_valor(t, 24 * 60 + 30), 33000)
 
     def test_minutos_completos(self):
         entrada = timezone.now()

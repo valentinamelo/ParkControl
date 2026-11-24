@@ -40,6 +40,7 @@ export class TarifasComponent implements OnInit {
   protected form = this.fb.group({
     tipo_vehiculo: [0, Validators.min(1)],
     modalidad: ['HORA' as Tarifa['modalidad']],
+    valor_primera_hora: this.fb.control<number | null>(null, Validators.min(1)),
     valor: [0, [Validators.required, Validators.min(1)]],
     minutos_fraccion: [60, [Validators.required, Validators.min(1)]],
     minutos_gracia: [0, [Validators.required, Validators.min(0)]],
@@ -88,6 +89,7 @@ export class TarifasComponent implements OnInit {
     this.form.reset({
       tipo_vehiculo: tarifa?.tipo_vehiculo ?? tipoId ?? this.tiposSinTarifa()[0]?.id ?? 0,
       modalidad: tarifa?.modalidad ?? 'HORA',
+      valor_primera_hora: tarifa?.valor_primera_hora ? Number(tarifa.valor_primera_hora) : null,
       valor: tarifa ? Number(tarifa.valor) : 0,
       minutos_fraccion: tarifa?.minutos_fraccion ?? 60,
       minutos_gracia: tarifa?.minutos_gracia ?? 0,
@@ -102,13 +104,16 @@ export class TarifasComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    const { tipo_vehiculo, modalidad, valor, minutos_fraccion, minutos_gracia, tope_diario, valor_pernoctacion } =
-      this.form.getRawValue();
+    const {
+      tipo_vehiculo, modalidad, valor, valor_primera_hora, minutos_fraccion, minutos_gracia, tope_diario,
+      valor_pernoctacion,
+    } = this.form.getRawValue();
     const datos = {
       modalidad,
       minutos_fraccion,
       minutos_gracia,
       valor: String(valor),
+      valor_primera_hora: valor_primera_hora ? String(valor_primera_hora) : null,
       tope_diario: tope_diario ? String(tope_diario) : null,
       valor_pernoctacion: valor_pernoctacion ? String(valor_pernoctacion) : null,
     };
@@ -163,11 +168,19 @@ export class TarifasComponent implements OnInit {
     });
   }
 
+  /** "$5.000 primera hora, luego $3.000 / 60 min" o "$4.000 / 60 min" */
+  protected valorTarifa(t: Tarifa): string {
+    const siguientes = `${this.pesos(t.valor)} / ${t.minutos_fraccion} min`;
+    return t.valor_primera_hora ? `${this.pesos(t.valor_primera_hora)} primera hora, luego ${siguientes}` : siguientes;
+  }
+
   protected nombreTipo(id: number): string {
     return this.tipos().find((t) => t.id === id)?.nombre ?? '';
   }
 
-  protected errorDe(campo: 'valor' | 'minutos_fraccion' | 'minutos_gracia' | 'tope_diario' | 'valor_pernoctacion'): string {
+  protected errorDe(
+    campo: 'valor' | 'valor_primera_hora' | 'minutos_fraccion' | 'minutos_gracia' | 'tope_diario' | 'valor_pernoctacion',
+  ): string {
     const control = this.form.controls[campo];
     if (control.touched && control.invalid) {
       return campo === 'minutos_gracia' ? 'No puede ser negativo.' : 'Debe ser mayor que cero.';
