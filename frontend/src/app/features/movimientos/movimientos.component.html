@@ -9,6 +9,21 @@
   </div>
 </header>
 
+@if (ultimaSalida(); as s) {
+  <div class="exito aviso-salida">
+    <span>
+      <i aria-hidden="true" class="fa-solid fa-circle-check"></i>
+      Salida de <b>{{ s.placa }}</b> registrada ({{ s.codigo }}, {{ duracion(s.minutos ?? 0) }}):
+      <b>{{ s.es_mensualidad ? 'mensualidad, sin cobro' : pesos(s.valor) }}</b>
+      @if (s.metodo_pago) { · {{ s.metodo_pago }} }
+      · <a class="enlace-tabla" [routerLink]="['tiquete', s.codigo]">Ver recibo</a>
+    </span>
+    <button class="cerrar-aviso" type="button" aria-label="Cerrar aviso" (click)="ultimaSalida.set(null)">
+      <i aria-hidden="true" class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+}
+
 @if (error()) {
   <div class="alerta">{{ error() }}</div>
 }

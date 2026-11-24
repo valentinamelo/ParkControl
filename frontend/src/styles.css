@@ -117,3 +117,8 @@ tr.inactivo td { color: var(--texto-suave); }
 .pestanas a:hover { color: var(--negro); }
 .pestanas a.activa { color: var(--negro); font-weight: 600; border-bottom-color: var(--amarillo); }
 .pestanas i { margin-right: 6px; }
+
+/* Aviso de salida registrada en Movimientos */
+.aviso-salida { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.aviso-salida .fa-circle-check { margin-right: 6px; }
+.cerrar-aviso { background: none; border: none; cursor: pointer; padding: 4px; font-size: 1rem; color: inherit; }
