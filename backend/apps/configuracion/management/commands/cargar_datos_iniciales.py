@@ -22,6 +22,10 @@ USUARIOS = [
     # email, contraseña, nombre, apellido, rol
     ("admin@parkcontrol.com", "Admin123*", "Administrador", "ParkControl", Usuario.Rol.ADMIN),
     ("trabajador@parkcontrol.com", "Trabajador123*", "Trabajador", "Turno 1", Usuario.Rol.TRABAJADOR),
+    # Equipo del proyecto
+    ("brayan@parkcontrol.com", "Brayan123*", "Brayan", "Fuertes", Usuario.Rol.ADMIN),
+    ("valentina@parkcontrol.com", "Valentina123*", "Valentina", "Melo", Usuario.Rol.TRABAJADOR),
+    ("laura@parkcontrol.com", "Laura123*", "Laura", "Gómez", Usuario.Rol.TRABAJADOR),
 ]
 
 # zona, tipo, cantidad de espacios
@@ -120,5 +124,5 @@ class Command(BaseCommand):
         if options["verbosity"] == 0:
             return
         self.stdout.write(self.style.SUCCESS("Datos iniciales cargados."))
-        self.stdout.write("  Administrador: admin@parkcontrol.com / Admin123*")
-        self.stdout.write("  Trabajador:    trabajador@parkcontrol.com / Trabajador123*")
+        for email, clave, nombre, apellido, rol in USUARIOS:
+            self.stdout.write(f"  {rol.label:<14} {nombre} {apellido}: {email} / {clave}")

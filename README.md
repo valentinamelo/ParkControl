@@ -94,6 +94,9 @@ Abre http://localhost:4200
 | --- | --- | --- |
 | Administrador | admin@parkcontrol.com | Admin123* |
 | Trabajador | trabajador@parkcontrol.com | Trabajador123* |
+| Administrador | brayan@parkcontrol.com (Brayan Fuertes) | Brayan123* |
+| Trabajador | valentina@parkcontrol.com (Valentina Melo) | Valentina123* |
+| Trabajador | laura@parkcontrol.com (Laura Gómez) | Laura123* |
 
 El panel de Django está en http://localhost:8000/admin/ (entra con el usuario administrador).
 
