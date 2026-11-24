@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { ADMIN, TRABAJADOR, iniciarSesion, placaAleatoria, registrarEntrada } from './utilidades';
+import { ADMIN, TRABAJADOR, iniciarSesion, liberar, placaAleatoria, registrarEntrada } from './utilidades';
 
 test.describe('Operación del parqueadero (avance 3)', () => {
   test('flujo completo: entrada, tiquete, salida con lector y pago', async ({ page }) => {
@@ -40,14 +40,29 @@ test.describe('Operación del parqueadero (avance 3)', () => {
     await expect(page.locator('.alerta')).toContainText('ya está cerrado');
   });
 
+  test('el tipo se elige solo según la placa y el código lleva su prefijo', async ({ page }) => {
+    await iniciarSesion(page, TRABAJADOR);
+    for (const tipo of ['Carro', 'Moto'] as const) {
+      await page.goto('/movimientos/entrada');
+      await page.getByLabel('Placa').fill(placaAleatoria(tipo));
+      const selector = page.getByLabel('Tipo de vehículo');
+      await expect(selector.locator('option:checked')).toHaveText(tipo);
+      await expect(page.getByText('Elegido por el formato de la placa')).toBeVisible();
+      await page.getByRole('button', { name: 'Registrar y generar tiquete' }).click();
+      await expect(page).toHaveURL(new RegExp(`/movimientos/tiquete/${tipo[0]}-[A-Z0-9]{8}`));
+      await liberar(page, page.url().match(/[CM]-[A-Z0-9]{8}/)![0]);
+    }
+  });
+
   test('no se registra dos veces la misma placa', async ({ page }) => {
     await iniciarSesion(page, TRABAJADOR);
-    const placa = placaAleatoria();
+    const placa = placaAleatoria('Moto');
     const codigo = await registrarEntrada(page, placa, 'Moto');
     await page.goto('/movimientos/entrada');
     await page.getByLabel('Placa').fill(placa);
     await expect(page.locator('.alerta')).toContainText(codigo);
     await expect(page.getByRole('button', { name: 'Registrar y generar tiquete' })).toBeDisabled();
+    await liberar(page, codigo);
   });
 
   test('tiquete perdido: se busca por placa y se suma la multa', async ({ page }) => {
@@ -109,6 +124,16 @@ test.describe('Administración (avances 2 y 4)', () => {
     await respuesta;
     await expect(page.getByRole('heading', { name: /Registros \(2\)/ })).toBeVisible(); // la entrada y la anulación
     await expect(page.getByRole('row', { name: /Anular tiquete/ })).toContainText('placa equivocada');
+  });
+
+  test('configura la pernoctación de la tarifa de carro', async ({ page }) => {
+    await iniciarSesion(page, ADMIN);
+    await page.goto('/configuracion/tarifas');
+    await page.getByRole('row', { name: /Carro/ }).getByRole('button', { name: 'Cambiar' }).click();
+    const modal = page.getByRole('dialog');
+    await modal.getByLabel('Pernoctación ($ por noche, opcional)').fill('15000');
+    await modal.getByRole('button', { name: 'Guardar tarifa' }).click();
+    await expect(page.getByRole('row', { name: /Carro/ }).first()).toContainText('$15.000 / noche');
   });
 
   test('crea espacios en lote en una zona nueva', async ({ page }) => {

@@ -44,6 +44,7 @@ export class TarifasComponent implements OnInit {
     minutos_fraccion: [60, [Validators.required, Validators.min(1)]],
     minutos_gracia: [0, [Validators.required, Validators.min(0)]],
     tope_diario: this.fb.control<number | null>(null, Validators.min(1)),
+    valor_pernoctacion: this.fb.control<number | null>(null, Validators.min(1)),
   });
 
   // Nuevo tipo de vehículo
@@ -91,6 +92,7 @@ export class TarifasComponent implements OnInit {
       minutos_fraccion: tarifa?.minutos_fraccion ?? 60,
       minutos_gracia: tarifa?.minutos_gracia ?? 0,
       tope_diario: tarifa?.tope_diario ? Number(tarifa.tope_diario) : null,
+      valor_pernoctacion: tarifa?.valor_pernoctacion ? Number(tarifa.valor_pernoctacion) : null,
     });
     this.modalAbierto.set(true);
   }
@@ -100,8 +102,16 @@ export class TarifasComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    const { tipo_vehiculo, modalidad, valor, minutos_fraccion, minutos_gracia, tope_diario } = this.form.getRawValue();
-    const datos = { modalidad, minutos_fraccion, minutos_gracia, valor: String(valor), tope_diario: tope_diario ? String(tope_diario) : null };
+    const { tipo_vehiculo, modalidad, valor, minutos_fraccion, minutos_gracia, tope_diario, valor_pernoctacion } =
+      this.form.getRawValue();
+    const datos = {
+      modalidad,
+      minutos_fraccion,
+      minutos_gracia,
+      valor: String(valor),
+      tope_diario: tope_diario ? String(tope_diario) : null,
+      valor_pernoctacion: valor_pernoctacion ? String(valor_pernoctacion) : null,
+    };
     const editando = this.editando();
     const peticion = editando
       ? this.api.cambiarTarifa(editando.id, datos)
@@ -157,7 +167,7 @@ export class TarifasComponent implements OnInit {
     return this.tipos().find((t) => t.id === id)?.nombre ?? '';
   }
 
-  protected errorDe(campo: 'valor' | 'minutos_fraccion' | 'minutos_gracia' | 'tope_diario'): string {
+  protected errorDe(campo: 'valor' | 'minutos_fraccion' | 'minutos_gracia' | 'tope_diario' | 'valor_pernoctacion'): string {
     const control = this.form.controls[campo];
     if (control.touched && control.invalid) {
       return campo === 'minutos_gracia' ? 'No puede ser negativo.' : 'Debe ser mayor que cero.';

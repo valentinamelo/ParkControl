@@ -59,6 +59,8 @@ export interface Tarifa {
   minutos_fraccion: number;
   minutos_gracia: number;
   tope_diario: string | null;
+  /** Por cada noche que el vehículo pasa dentro con el parqueadero cerrado. null: sin pernoctación. */
+  valor_pernoctacion: string | null;
   vigente: boolean;
   creada: string;
 }
@@ -114,9 +116,17 @@ export const METODOS_PAGO: { valor: MetodoPago; texto: string; icono: string }[]
 
 /** Valor que se cobraría si el vehículo saliera ahora (lo calcula el backend). */
 export interface Cobro {
+  /** Tiempo total dentro del parqueadero */
   minutos: number;
+  /** Minutos que se cobran por horas: con pernoctación, solo los del horario de atención */
+  minutos_cobrados: number;
+  noches: number;
+  valor_tiempo: number;
+  valor_noches: number;
+  valor_pernoctacion: number | null;
   tarifa: string | null;
   sin_tarifa: boolean;
+  /** valor_tiempo + valor_noches */
   valor: number;
   multa: number;
   total: number;
@@ -135,6 +145,7 @@ export interface Tiquete {
   minutos_transcurridos: number | null;
   valor: string | null;
   multa: string;
+  noches: number;
   estado: 'ABIERTO' | 'CERRADO' | 'ANULADO';
   estado_display: string;
   es_mensualidad: boolean;

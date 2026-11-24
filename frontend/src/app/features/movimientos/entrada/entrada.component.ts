@@ -10,12 +10,9 @@ import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { erroresDeCampo, mensajeError } from '../../../core/errores';
 import { ConsultaPlaca, Espacio, TipoVehiculo } from '../../../core/models';
+import { normalizarPlaca, tipoPorPlaca } from '../../../core/placas';
 
 const PLACA_VALIDA = /^[A-Z0-9]{4,8}$/;
-
-function normalizarPlaca(texto: string): string {
-  return texto.toUpperCase().replace(/[\s-]/g, '');
-}
 
 /** RF-11 y RF-18: registra la entrada, asigna un espacio compatible y genera el tiquete. */
 @Component({
@@ -40,6 +37,8 @@ export class EntradaComponent implements OnInit {
   protected erroresCampo = signal<Record<string, string>>({});
   /** El backend avisó que está fuera de horario y el admin puede confirmar. */
   protected confirmarHorario = signal(false);
+  /** Tipo que se dedujo del formato de la placa (el trabajador lo puede cambiar). */
+  protected tipoDetectado = signal<string | null>(null);
 
   protected form = inject(FormBuilder).nonNullable.group({
     placa: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9 -]{4,10}$/)]],
@@ -79,13 +78,27 @@ export class EntradaComponent implements OnInit {
       .subscribe((c) => {
         this.consultando.set(false);
         this.consulta.set(c);
+        if (!c.vehiculo) this.preseleccionarTipo(c.placa);
         this.cargarEspacios();
       });
 
     this.form.controls.tipo_vehiculo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((id) => {
       this.tipoId.set(id);
+      this.tipoDetectado.set(null); // lo cambió a mano
       if (this.esNuevo()) this.cargarEspacios();
     });
+  }
+
+  /** Vehículo nuevo: elige Carro o Moto según el formato de la placa (ABC123 o ABC12D). */
+  private preseleccionarTipo(placa: string): void {
+    const nombre = tipoPorPlaca(placa);
+    const tipo = this.tipos().find((t) => t.nombre.toLowerCase() === nombre?.toLowerCase());
+    this.tipoDetectado.set(tipo ? tipo.nombre : null);
+    if (tipo) {
+      // Sin emitir el cambio: los espacios se cargan una sola vez, justo después
+      this.form.controls.tipo_vehiculo.setValue(tipo.id, { emitEvent: false });
+      this.tipoId.set(tipo.id);
+    }
   }
 
   private reiniciarConsulta(): void {
@@ -93,6 +106,7 @@ export class EntradaComponent implements OnInit {
     this.espacios.set([]);
     this.espacioElegido.set(null);
     this.confirmarHorario.set(false);
+    this.tipoDetectado.set(null);
     this.error.set('');
   }
 

@@ -12,13 +12,16 @@ import { EscanerComponent } from '../../../shared/escaner/escaner.component';
 import { ModalComponent } from '../../../shared/modal/modal.component';
 
 /**
- * "PC-000123", "pc000123" o "123" -> "PC-000123". Si no parece un código, es una placa
- * (para el tiquete perdido) y devuelve null.
+ * "c-7k4m2qxr", "C7K4M2QXR" o "C'7K4M2QXR" -> "C-7K4M2QXR" (C carro, M moto).
+ * Se ignoran los símbolos porque un lector USB con otra distribución de teclado puede cambiar el guion.
+ * También acepta los formatos anteriores (PC-7K4M2QXR, PC-000123). Si no parece un código,
+ * es una placa (para el tiquete perdido, máximo 8 caracteres) y devuelve null.
  */
 export function normalizarCodigo(texto: string): string | null {
-  const limpio = texto.trim().toUpperCase().replace(/\s/g, '');
-  const m = limpio.match(/^(?:PC-?)?(\d{1,6})$/);
-  return m ? `PC-${m[1].padStart(6, '0')}` : null;
+  const limpio = texto.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (/^[A-Z][A-Z0-9]{8}$/.test(limpio)) return `${limpio[0]}-${limpio.slice(1)}`;
+  const antiguo = limpio.match(/^PC([A-Z0-9]{8}|\d{6})$/);
+  return antiguo ? `PC-${antiguo[1]}` : null;
 }
 
 /** RF-13 a RF-15: busca el tiquete (lector USB, cámara o digitado), muestra el cobro y registra el pago. */

@@ -23,13 +23,13 @@ Para terminar el turno pulsa **Cerrar sesión**, abajo en el menú. Si alguien m
 
 1. Pulsa **Registrar entrada** (en Movimientos o en el Dashboard).
 2. Escribe la **placa**. ParkControl la revisa sola y te avisa:
-   - **Vehículo nuevo:** elige si es carro o moto. Marca, modelo y color son opcionales.
+   - **Vehículo nuevo:** el tipo se elige solo según la placa: `ABC123` (3 letras y 3 números) es carro y `ABC12D` (3 letras, 2 números y 1 letra) es moto. Si la placa tiene otro formato, o el tipo no corresponde, cámbialo. Marca, modelo y color son opcionales.
    - **Vehículo registrado:** muestra sus datos; no tienes que escribir nada más.
    - **Mensualidad vigente:** el vehículo no paga al salir. Si tiene espacio fijo, ya queda elegido.
    - **Ya está dentro:** no se puede registrar dos veces; te lleva a su salida si lo necesitas.
 3. A la derecha aparecen los espacios libres para ese tipo de vehículo. El elegido está en amarillo; toca otro si quieres cambiarlo.
 4. Pulsa **Registrar y generar tiquete**.
-5. Pulsa **Imprimir** y entrega el tiquete al conductor.
+5. Pulsa **Imprimir** y entrega el tiquete al conductor. El código empieza por **C** si es carro o **M** si es moto, seguido de 8 letras y números al azar, para que nadie pueda adivinar el código de otro vehículo.
 
 Si el parqueadero está fuera del horario de atención, el trabajador no puede registrar la entrada. El administrador ve el botón **Registrar de todas formas**.
 
@@ -39,7 +39,7 @@ Si el parqueadero está fuera del horario de atención, el trabajador no puede r
 
 1. Pulsa **Registrar salida**.
 2. **Escanea el código de barras** del tiquete con el lector. No hace falta pulsar nada más: el lector escribe el código y lo busca solo.
-   - Sin lector: escribe el código (`PC-000123` o solo `123`) y pulsa **Buscar**.
+   - Sin lector: escribe el código que aparece debajo del código de barras (por ejemplo `C-7K4M2QXR`) y pulsa **Buscar**. No importan las mayúsculas ni el guion.
    - Con la cámara: pulsa el botón de la cámara y apunta al código de barras.
 3. Revisa el tiempo y el **total a pagar**.
 4. Elige el método de pago: **Efectivo**, **Tarjeta** o **Transferencia**.
@@ -54,6 +54,8 @@ En lugar del código, escribe la **placa** y pulsa **Buscar**. ParkControl marca
 ### ¿Cuánto se cobra?
 
 Se cobra cada hora (o fracción, según la tarifa) empezada. Por ejemplo, con $4.000 la hora, 2 horas y 45 minutos se cobran como 3 horas: **$12.000**. Si la tarifa tiene minutos de gracia y el vehículo sale antes de que terminen, no paga. El total de un día nunca pasa del tope diario.
+
+**Pernoctación:** si el vehículo se queda de noche (desde el cierre hasta la apertura), esas horas no se cobran por hora: se cobra el valor de pernoctación por cada noche, aparte de las horas que estuvo con el parqueadero abierto. Por ejemplo, con horario de 6:00 a 22:00, $4.000 la hora y $15.000 la noche, un carro que entra el lunes a las 20:00 y sale el martes a las 8:00 paga 4 horas ($16.000) más 1 noche ($15.000): **$31.000**. En la pantalla de salida aparecen las dos partes por separado.
 
 ---
 
@@ -96,9 +98,9 @@ Muestra la ocupación en tiempo real (en total y por tipo de vehículo), lo que 
 
 ### Configuración
 
-- **Tarifas:** pulsa **Cambiar** en la tarifa de un tipo de vehículo. Por hora o por fracción, con minutos de gracia y tope diario. Al cambiarla se crea una tarifa nueva y la anterior queda en el **historial**: lo que ya se cobró no cambia. Aquí también se agregan tipos de vehículo (por ejemplo, bicicleta).
+- **Tarifas:** pulsa **Cambiar** en la tarifa de un tipo de vehículo. Por hora o por fracción, con minutos de gracia, tope diario y, si quieres, el valor de **pernoctación** por noche (déjalo vacío si no se cobra). Al cambiarla se crea una tarifa nueva y la anterior queda en el **historial**: lo que ya se cobró no cambia. Aquí también se agregan tipos de vehículo (por ejemplo, bicicleta).
 - **Planes mensuales:** nombre, tipo de vehículo, días y valor. Un plan que ya se vendió no se borra: se desactiva para que no se venda más.
-- **Horarios:** marca los días que se abre y la hora de apertura y cierre. Pulsa **Guardar horario**.
+- **Horarios:** marca los días que se abre y la hora de apertura y cierre. Pulsa **Guardar horario**. Fuera de este horario el trabajador no puede registrar entradas, y es el que define cuándo un vehículo pernocta.
 - **Usuarios:** crea trabajadores con su correo y una contraseña de al menos 8 caracteres. **Desactivar** impide que el usuario entre, sin borrar lo que registró.
 - **Parqueadero:** nombre, NIT, dirección y teléfono (salen en el tiquete) y el valor de la **multa por tiquete perdido**.
 
