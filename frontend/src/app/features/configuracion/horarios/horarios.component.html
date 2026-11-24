@@ -1,5 +1,9 @@
 <form class="card" style="max-width: 760px" [formGroup]="form" (ngSubmit)="guardar()">
   <h2>Horario de atención</h2>
+  <p class="nota" style="margin-bottom: 16px">
+    Fuera de este horario el trabajador no puede registrar entradas. Si la tarifa tiene pernoctación, el tiempo
+    entre el cierre y la apertura no se cobra por horas: cada noche se cobra con el valor de pernoctación.
+  </p>
   @if (error()) {
     <div class="alerta">{{ error() }}</div>
   }

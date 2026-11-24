@@ -54,7 +54,10 @@ class TarifaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(anterior, data=request.data, partial=kwargs.get("partial", False))
         serializer.is_valid(raise_exception=True)
 
-        campos = ["tipo_vehiculo", "modalidad", "valor", "minutos_fraccion", "minutos_gracia", "tope_diario"]
+        campos = [
+            "tipo_vehiculo", "modalidad", "valor", "minutos_fraccion", "minutos_gracia", "tope_diario",
+            "valor_pernoctacion",
+        ]
         datos = {campo: getattr(anterior, campo) for campo in campos}
         datos.update(serializer.validated_data)
         datos["tipo_vehiculo"] = anterior.tipo_vehiculo  # el tipo de vehículo de una tarifa no cambia

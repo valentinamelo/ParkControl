@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -16,8 +14,9 @@ from apps.vehiculos.models import Vehiculo
 from apps.vehiculos.serializers import normalizar_placa
 from parkcontrol.excepciones import ReglaNegocio
 
+from .codigos import generar_codigo, normalizar_codigo
 from .models import Pago, Tiquete
-from .reglas import calcular_valor, dentro_de_horario, minutos_entre, tarifa_vigente
+from .reglas import calcular_cobro, dentro_de_horario, horarios_por_dia, minutos_entre, tarifa_vigente
 from .serializers import AnulacionSerializer, EntradaSerializer, SalidaSerializer, TiqueteSerializer
 
 
@@ -51,8 +50,7 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(self.get_serializer(tiquetes, many=True).data)
 
     def get_object(self):
-        codigo = self.kwargs["codigo"].strip().upper()
-        return get_object_or_404(self.get_queryset(), codigo=codigo)
+        return get_object_or_404(self.get_queryset(), codigo=normalizar_codigo(self.kwargs["codigo"]))
 
     # --- Consultas ---
 
@@ -61,8 +59,9 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
         tiquetes = self.get_queryset().filter(estado=Tiquete.Estado.ABIERTO).order_by("fecha_entrada")
         datos = self.get_serializer(tiquetes, many=True).data
         # Valor que pagaría si saliera ahora (orientativo; el definitivo se calcula al dar salida)
+        horarios = horarios_por_dia()
         for tiquete, fila in zip(tiquetes, datos):
-            fila["valor_actual"] = self._cobro(tiquete)["valor"]
+            fila["valor_actual"] = self._cobro(tiquete, horarios=horarios)["valor"]
         return Response(datos)
 
     def retrieve(self, request, *args, **kwargs):
@@ -100,19 +99,27 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
             }
         return Response(respuesta)
 
-    def _cobro(self, tiquete, perdido=False, momento=None):
-        """Minutos, valor según la tarifa vigente y multa. Mensualidad vigente: $0 (RF-18)."""
-        minutos = minutos_entre(tiquete.fecha_entrada, momento or timezone.now())
+    def _cobro(self, tiquete, perdido=False, momento=None, horarios=None):
+        """
+        Tiempo, valor según la tarifa vigente (con pernoctación si la tiene) y multa.
+        Mensualidad vigente: $0 (RF-18).
+        """
+        momento = momento or timezone.now()
         tarifa = None if tiquete.es_mensualidad else tarifa_vigente(tiquete.vehiculo.tipo_vehiculo)
-        valor = calcular_valor(tarifa, minutos) if tarifa else 0
+        if tarifa:
+            cobro = calcular_cobro(tarifa, tiquete.fecha_entrada, momento, horarios)
+        else:
+            minutos = minutos_entre(tiquete.fecha_entrada, momento)
+            cobro = {"minutos": minutos, "minutos_cobrados": 0, "noches": 0,
+                     "valor_tiempo": 0, "valor_noches": 0, "valor": 0}
         multa = int(Parqueadero.objects.get_or_create(pk=1)[0].multa_tiquete_perdido) if perdido else 0
         return {
-            "minutos": minutos,
+            **cobro,
             "tarifa": str(tarifa) if tarifa else None,
+            "valor_pernoctacion": int(tarifa.valor_pernoctacion) if tarifa and tarifa.valor_pernoctacion else None,
             "sin_tarifa": tarifa is None and not tiquete.es_mensualidad,
-            "valor": valor,
             "multa": multa,
-            "total": valor + multa,
+            "total": cobro["valor"] + multa,
         }
 
     # --- Entrada ---
@@ -175,13 +182,11 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
                 if espacio is None:
                     raise ReglaNegocio(f"No hay espacios disponibles para {vehiculo.tipo_vehiculo}.")
 
-            # Regla 6: el espacio pasa a OCUPADO y se genera el código consecutivo
+            # Regla 6: el espacio pasa a OCUPADO y se genera el código del tiquete (aleatorio, no consecutivo)
             tiquete = Tiquete.objects.create(
-                codigo=f"TMP-{uuid4().hex[:16]}", vehiculo=vehiculo, espacio=espacio,
+                codigo=generar_codigo(vehiculo.tipo_vehiculo), vehiculo=vehiculo, espacio=espacio,
                 fecha_entrada=timezone.now(), es_mensualidad=mensualidad is not None, usuario_entrada=request.user,
             )
-            tiquete.codigo = f"PC-{tiquete.pk:06d}"
-            tiquete.save(update_fields=["codigo"])
             espacio.estado = Espacio.Estado.OCUPADO
             espacio.save(update_fields=["estado"])
             registrar(
@@ -202,7 +207,7 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
         with transaction.atomic():
             tiquete = get_object_or_404(
                 Tiquete.objects.select_for_update().select_related("vehiculo__tipo_vehiculo", "espacio"),
-                codigo=codigo.strip().upper(),
+                codigo=normalizar_codigo(codigo),
             )
             if tiquete.estado != Tiquete.Estado.ABIERTO:
                 raise ReglaNegocio(f"El tiquete {tiquete.codigo} ya está {tiquete.get_estado_display().lower()}.")
@@ -218,6 +223,7 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
             tiquete.minutos = cobro["minutos"]
             tiquete.valor = cobro["total"]
             tiquete.multa = cobro["multa"]
+            tiquete.noches = cobro["noches"]
             tiquete.estado = Tiquete.Estado.CERRADO
             tiquete.usuario_salida = request.user
             tiquete.save()
@@ -251,7 +257,7 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
 
         with transaction.atomic():
             tiquete = get_object_or_404(
-                Tiquete.objects.select_for_update().select_related("vehiculo", "espacio"), codigo=codigo.strip().upper()
+                Tiquete.objects.select_for_update().select_related("vehiculo", "espacio"), codigo=normalizar_codigo(codigo)
             )
             if tiquete.estado == Tiquete.Estado.ANULADO:
                 raise ReglaNegocio(f"El tiquete {tiquete.codigo} ya está anulado.")

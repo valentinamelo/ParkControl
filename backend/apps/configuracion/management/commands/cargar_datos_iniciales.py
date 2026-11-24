@@ -14,6 +14,7 @@ from django.utils import timezone
 from apps.configuracion.models import Horario, Parqueadero, Tarifa, TipoVehiculo
 from apps.espacios.models import Espacio, Zona
 from apps.mensualidades.models import PlanMensual
+from apps.operaciones.codigos import generar_codigo
 from apps.operaciones.models import Tiquete
 from apps.usuarios.models import Usuario
 from apps.vehiculos.models import Vehiculo
@@ -77,12 +78,12 @@ class Command(BaseCommand):
         Tarifa.objects.get_or_create(
             tipo_vehiculo=carro, vigente=True,
             defaults={"modalidad": Tarifa.Modalidad.HORA, "valor": 4000, "minutos_fraccion": 60,
-                      "minutos_gracia": 0, "tope_diario": 30000},
+                      "minutos_gracia": 0, "tope_diario": 30000, "valor_pernoctacion": 15000},
         )
         Tarifa.objects.get_or_create(
             tipo_vehiculo=moto, vigente=True,
             defaults={"modalidad": Tarifa.Modalidad.HORA, "valor": 2000, "minutos_fraccion": 60,
-                      "minutos_gracia": 0, "tope_diario": 15000},
+                      "minutos_gracia": 0, "tope_diario": 15000, "valor_pernoctacion": 8000},
         )
 
         # 4. Horarios: lunes a sábado 6:00-22:00, domingo 8:00-18:00
@@ -109,15 +110,15 @@ class Command(BaseCommand):
         # 8. Vehículos dentro del parqueadero (tiquetes abiertos)
         trabajador = Usuario.objects.get(email="trabajador@parkcontrol.com")
         ahora = timezone.now()
-        for n, (placa, codigo_espacio, minutos) in enumerate(OCUPADOS, start=1):
+        for placa, codigo_espacio, minutos in OCUPADOS:
             espacio = Espacio.objects.get(codigo=codigo_espacio)
             vehiculo = Vehiculo.objects.get(placa=placa)
-            _, creado = Tiquete.objects.get_or_create(
-                codigo=f"PC-{n:06d}",
-                defaults={"vehiculo": vehiculo, "espacio": espacio, "usuario_entrada": trabajador,
-                          "fecha_entrada": ahora - timedelta(minutes=minutos)},
-            )
-            if creado:
+            # Solo la primera vez: si el vehículo ya tiene tiquetes, no se le crea otro
+            if not vehiculo.tiquetes.exists() and espacio.estado == Espacio.Estado.DISPONIBLE:
+                Tiquete.objects.create(
+                    codigo=generar_codigo(vehiculo.tipo_vehiculo), vehiculo=vehiculo, espacio=espacio, usuario_entrada=trabajador,
+                    fecha_entrada=ahora - timedelta(minutes=minutos),
+                )
                 espacio.estado = Espacio.Estado.OCUPADO
                 espacio.save()
 

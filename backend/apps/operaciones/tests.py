@@ -1,4 +1,4 @@
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 
 from django.test import SimpleTestCase
 from django.utils import timezone
@@ -8,8 +8,11 @@ from apps.espacios.models import Espacio
 from apps.reportes.models import Bitacora
 from apps.usuarios.tests import ApiTestBase
 
+from .codigos import ALFABETO, LONGITUD, normalizar_codigo, prefijo
 from .models import Pago, Tiquete
-from .reglas import calcular_valor, minutos_entre
+from .reglas import calcular_cobro, calcular_valor, minutos_entre
+
+CODIGO_ALEATORIO = rf"^[CM]-[{ALFABETO}]{{{LONGITUD}}}$"
 
 
 def tarifa(valor=4000, fraccion=60, gracia=0, tope=None):
@@ -66,6 +69,8 @@ class OperacionTestBase(ApiTestBase):
         Horario.objects.update(abierto=True, hora_apertura=time(0), hora_cierre=time(23, 59, 59))
         self.carro = TipoVehiculo.objects.get(nombre="Carro")
         self.moto = TipoVehiculo.objects.get(nombre="Moto")
+        # Tiquete abierto de ABC123 en los datos iniciales (el código es aleatorio)
+        self.codigo_abc = Tiquete.objects.get(vehiculo__placa="ABC123").codigo
 
     def entrada(self, **datos):
         return self.client.post("/api/tiquetes/entrada/", datos, format="json")
@@ -85,7 +90,7 @@ class EntradaTests(OperacionTestBase):
     def test_entrada_de_vehiculo_registrado(self):
         r = self.entrada(placa="ghi-987")
         self.assertEqual(r.status_code, 201, r.data)
-        self.assertEqual(r.data["codigo"], "PC-000006")  # consecutivo después de los 5 del fixture
+        self.assertRegex(r.data["codigo"], CODIGO_ALEATORIO)
         self.assertEqual(r.data["placa"], "GHI987")
         self.assertEqual(r.data["espacio"], "A-01")  # primer espacio de carro libre
         self.assertEqual(Espacio.objects.get(codigo="A-01").estado, "OCUPADO")
@@ -114,7 +119,7 @@ class EntradaTests(OperacionTestBase):
     def test_placa_con_tiquete_abierto(self):
         r = self.entrada(placa="ABC123")
         self.assertEqual(r.status_code, 400)
-        self.assertIn("PC-000001", r.data["detail"])
+        self.assertIn(self.codigo_abc, r.data["detail"])
 
     def test_tipo_distinto_al_registrado(self):
         r = self.entrada(placa="GHI987", tipo_vehiculo=self.moto.pk)
@@ -145,7 +150,7 @@ class EntradaTests(OperacionTestBase):
     def test_consultar_placa(self):
         r = self.client.get("/api/tiquetes/consultar-placa/?placa=abc123").data
         self.assertEqual(r["vehiculo"]["tipo_vehiculo_nombre"], "Carro")
-        self.assertEqual(r["tiquete_abierto"]["codigo"], "PC-000001")
+        self.assertEqual(r["tiquete_abierto"]["codigo"], self.codigo_abc)
         self.assertIsNone(self.client.get("/api/tiquetes/consultar-placa/?placa=NOEXISTE").data["vehiculo"])
 
     def test_disponibles_por_tipo(self):
@@ -222,3 +227,129 @@ class SalidaTests(OperacionTestBase):
 
     def test_tiquete_inexistente(self):
         self.assertEqual(self.client.get("/api/tiquetes/PC-999999/").status_code, 404)
+
+
+class CodigoTiqueteTests(OperacionTestBase):
+    """Los códigos no son consecutivos, para que no se puedan adivinar ni falsificar."""
+
+    def setUp(self):
+        super().setUp()
+        self.como_trabajador()
+
+    def test_datos_iniciales_con_codigos_aleatorios(self):
+        for codigo, tipo in Tiquete.objects.values_list("codigo", "vehiculo__tipo_vehiculo__nombre"):
+            self.assertRegex(codigo, CODIGO_ALEATORIO)
+            self.assertEqual(codigo[0], tipo[0])
+
+    def test_prefijo_segun_el_tipo_de_vehiculo(self):
+        carro = self.entrada(placa="CAR123", tipo_vehiculo=self.carro.pk).data["codigo"]
+        moto = self.entrada(placa="MOT12A", tipo_vehiculo=self.moto.pk).data["codigo"]
+        self.assertTrue(carro.startswith("C-"), carro)
+        self.assertTrue(moto.startswith("M-"), moto)
+        self.assertEqual(prefijo(TipoVehiculo(nombre="Ómnibus")), "O")  # sin tilde
+
+    def test_codigos_no_consecutivos_ni_repetidos(self):
+        codigos = [self.entrada(placa=f"ALE{i}23", tipo_vehiculo=self.moto.pk).data["codigo"] for i in range(2)]
+        self.assertEqual(len(set(codigos)), 2)
+        for codigo in codigos:
+            self.assertRegex(codigo, CODIGO_ALEATORIO)
+            self.assertFalse(any(c in codigo[3:] for c in "01OI"))  # sin caracteres que se confunden
+
+    def test_busqueda_tolera_minusculas_y_simbolos(self):
+        cuerpo = self.codigo_abc[2:]
+        for escrito in (self.codigo_abc.lower(), f"C{cuerpo}", f"C'{cuerpo}", f" c-{cuerpo.lower()} "):
+            with self.subTest(escrito=escrito):
+                self.assertEqual(normalizar_codigo(escrito), self.codigo_abc)
+                self.assertEqual(self.client.get(f"/api/tiquetes/{escrito.strip()}/").data["placa"], "ABC123")
+
+    def test_codigos_antiguos_siguen_funcionando(self):
+        for antiguo in ("PC-000001", "PC-7K4M2QXR"):
+            with self.subTest(antiguo=antiguo):
+                Tiquete.objects.filter(vehiculo__placa="ABC123").update(codigo=antiguo)
+                self.assertEqual(normalizar_codigo(antiguo.lower().replace("-", "")), antiguo)
+                self.assertEqual(self.client.get(f"/api/tiquetes/{antiguo}/").data["placa"], "ABC123")
+
+
+class PernoctacionTests(SimpleTestCase):
+    """
+    Con pernoctación, las horas se cobran solo dentro del horario de atención y cada noche
+    con el parqueadero cerrado se cobra aparte. Horario: lunes a sábado 06:00-22:00.
+    """
+
+    def setUp(self):
+        self.horarios = {dia: Horario(dia_semana=dia, hora_apertura=time(6), hora_cierre=time(22)) for dia in range(6)}
+        self.horarios[6] = Horario(dia_semana=6, abierto=False, hora_apertura=time(8), hora_cierre=time(18))
+        self.tarifa = tarifa(valor=4000, tope=30000)
+        self.tarifa.valor_pernoctacion = 15000
+
+    def momento(self, dia, hora, minuto=0):
+        """dia: fecha de noviembre de 2026 (el 23 es lunes)."""
+        return timezone.make_aware(datetime(2026, 11, dia, hora, minuto))
+
+    def cobro(self, entrada, salida, con_pernoctacion=True):
+        if not con_pernoctacion:
+            self.tarifa.valor_pernoctacion = None
+        return calcular_cobro(self.tarifa, entrada, salida, self.horarios)
+
+    def test_dentro_del_horario_no_hay_noche(self):
+        c = self.cobro(self.momento(23, 10), self.momento(23, 12, 45))
+        self.assertEqual((c["minutos_cobrados"], c["noches"], c["valor"]), (165, 0, 12000))
+
+    def test_una_noche_se_cobra_aparte_de_las_horas(self):
+        # Lunes 20:00 a martes 08:00: 2 h el lunes + 2 h el martes, y 1 noche
+        c = self.cobro(self.momento(23, 20), self.momento(24, 8))
+        self.assertEqual(c["minutos"], 12 * 60)
+        self.assertEqual(c["minutos_cobrados"], 240)
+        self.assertEqual(c["noches"], 1)
+        self.assertEqual((c["valor_tiempo"], c["valor_noches"], c["valor"]), (16000, 15000, 31000))
+
+    def test_llega_poco_antes_del_cierre_y_sale_al_abrir(self):
+        c = self.cobro(self.momento(23, 21, 50), self.momento(24, 6, 5))
+        self.assertEqual((c["minutos_cobrados"], c["noches"], c["valor"]), (15, 1, 4000 + 15000))
+
+    def test_dia_cerrado_cuenta_como_otra_noche(self):
+        # Sábado 21:00 a lunes 07:00 con el domingo cerrado: 1 h + 1 h y 2 noches
+        c = self.cobro(self.momento(28, 21), self.momento(30, 7))
+        self.assertEqual((c["minutos_cobrados"], c["noches"]), (120, 2))
+        self.assertEqual(c["valor"], 8000 + 2 * 15000)
+
+    def test_el_tope_diario_aplica_a_las_horas(self):
+        # Domingo abierto 08:00-18:00: sábado 21:00 a lunes 07:00 = 12 h en horario, topadas en $30.000
+        self.horarios[6] = Horario(dia_semana=6, hora_apertura=time(8), hora_cierre=time(18))
+        c = self.cobro(self.momento(28, 21), self.momento(30, 7))
+        self.assertEqual((c["minutos_cobrados"], c["noches"]), (12 * 60, 2))
+        self.assertEqual((c["valor_tiempo"], c["valor"]), (30000, 30000 + 2 * 15000))
+
+    def test_sin_pernoctacion_se_cobra_el_tiempo_corrido(self):
+        c = self.cobro(self.momento(23, 20), self.momento(24, 8), con_pernoctacion=False)
+        self.assertEqual((c["minutos_cobrados"], c["noches"], c["valor"]), (12 * 60, 0, 30000))
+
+
+class PernoctacionApiTests(OperacionTestBase):
+    """La salida guarda las noches cobradas y el administrador configura el valor por noche."""
+
+    def test_salida_despues_de_una_noche(self):
+        self.como_trabajador()
+        codigo = self.entrada(placa="NOC123", tipo_vehiculo=self.carro.pk).data["codigo"]
+        # Después de la entrada, para que la prueba no dependa de la hora a la que se corre
+        Horario.objects.update(abierto=True, hora_apertura=time(6), hora_cierre=time(22))
+        self.atrasar(codigo, 26 * 60)  # más de un día: pasa al menos una medianoche con el parqueadero cerrado
+        cobro = self.client.get(f"/api/tiquetes/{codigo}/").data["cobro"]
+        self.assertGreaterEqual(cobro["noches"], 1)
+        self.assertEqual(cobro["valor_noches"], cobro["noches"] * 15000)  # tarifa de carro de los datos iniciales
+        self.assertEqual(cobro["valor"], cobro["valor_tiempo"] + cobro["valor_noches"])
+        r = self.client.post(f"/api/tiquetes/{codigo}/salida/", {"metodo": "EFECTIVO"}, format="json")
+        self.assertEqual(r.data["noches"], cobro["noches"])
+        self.assertEqual(int(r.data["valor"]), cobro["valor"])
+
+    def test_admin_configura_y_quita_la_pernoctacion(self):
+        self.como_admin()
+        vigente = Tarifa.objects.get(tipo_vehiculo=self.carro, vigente=True)
+        r = self.client.patch(f"/api/tarifas/{vigente.pk}/", {"valor_pernoctacion": 0}, format="json")
+        self.assertIn("valor_pernoctacion", r.data)
+        r = self.client.patch(f"/api/tarifas/{vigente.pk}/", {"valor_pernoctacion": 20000}, format="json")
+        self.assertEqual(r.data["valor_pernoctacion"], "20000")
+        self.assertEqual(r.data["valor"], "4000")  # lo demás de la tarifa se conserva
+        nueva = r.data["id"]
+        r = self.client.patch(f"/api/tarifas/{nueva}/", {"valor_pernoctacion": None}, format="json")
+        self.assertIsNone(r.data["valor_pernoctacion"])

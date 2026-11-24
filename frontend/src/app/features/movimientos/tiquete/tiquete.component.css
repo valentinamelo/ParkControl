@@ -1,9 +1,10 @@
 .volver { display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--texto-suave); margin-bottom: 6px; }
 .volver:hover { color: var(--negro); }
 
-/* Tamaño de impresora térmica de 80 mm */
+/* En pantalla, lo bastante ancho para que el código de barras (145 módulos × 3 px + márgenes = 459 px)
+   no se achique y la cámara lo pueda leer; al imprimir se ajusta a los 80 mm del papel térmico. */
 .papel {
-  width: 100%; max-width: 320px; margin: 0 auto; padding: 22px 20px; background: var(--blanco);
+  width: 100%; max-width: 500px; margin: 0 auto; padding: 22px 20px; background: var(--blanco);
   border-radius: var(--radio); box-shadow: var(--sombra); font-size: 0.85rem; color: #000;
 }
 .centro { text-align: center; }

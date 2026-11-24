@@ -21,7 +21,7 @@
       <label class="etiqueta" for="campo">Escanea el tiquete o digita el código</label>
       <div class="lector">
         <i aria-hidden="true" class="fa-solid fa-barcode"></i>
-        <input #campo class="input" id="campo" name="codigo" [(ngModel)]="texto" placeholder="PC-000123 o placa"
+        <input #campo class="input" id="campo" name="codigo" [(ngModel)]="texto" placeholder="C-7K4M2QXR o placa"
                autocomplete="off" autofocus />
         <button class="btn btn-oscuro" type="submit" [disabled]="buscando()">Buscar</button>
         <button class="btn btn-borde" type="button" (click)="camara.set(true)" aria-label="Escanear con la cámara">
@@ -66,7 +66,16 @@
         </label>
 
         <dl class="cuenta">
-          <div><dt>Tiempo</dt><dd>{{ pesos(c.valor) }}</dd></div>
+          <div>
+            <dt>Tiempo{{ c.noches ? ' en horario (' + duracion(c.minutos_cobrados) + ')' : '' }}</dt>
+            <dd>{{ pesos(c.valor_tiempo) }}</dd>
+          </div>
+          @if (c.noches) {
+            <div>
+              <dt>Pernoctación ({{ c.noches }} {{ c.noches === 1 ? 'noche' : 'noches' }} × {{ pesos(c.valor_pernoctacion) }})</dt>
+              <dd>{{ pesos(c.valor_noches) }}</dd>
+            </div>
+          }
           @if (c.multa) { <div><dt>Multa por tiquete perdido</dt><dd>{{ pesos(c.multa) }}</dd></div> }
           <div class="total"><dt>Total a pagar</dt><dd>{{ pesos(c.total) }}</dd></div>
         </dl>

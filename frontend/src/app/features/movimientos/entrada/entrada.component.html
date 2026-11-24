@@ -62,6 +62,9 @@
                 <option [ngValue]="t.id">{{ t.nombre }}</option>
               }
             </select>
+            @if (tipoDetectado(); as tipo) {
+              <small class="nota">Elegido por el formato de la placa ({{ tipo === 'Moto' ? 'ABC12D' : 'ABC123' }}). Cámbialo si no corresponde.</small>
+            }
           </div>
           <div class="campos-2">
             <div class="campo">

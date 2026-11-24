@@ -78,7 +78,7 @@ class ReporteIngresosTests(FlujoBase):
         self.assertEqual(metodos, {"Transferencia": 180000, "Efectivo": 12000, "Tarjeta": 4000})
         conceptos = {g["nombre"]: g["total"] for g in r["por_concepto"]}
         self.assertEqual(conceptos, {"Mensualidad": 180000, "Parqueo": 16000})
-        self.assertEqual(r["detalle"][0]["referencia"], "PC-000001")
+        self.assertEqual(r["detalle"][0]["referencia"], self.codigo_abc)
 
     def test_filtros(self):
         moto = TipoVehiculo.objects.get(nombre="Moto")
@@ -103,7 +103,7 @@ class ReporteIngresosTests(FlujoBase):
         self.assertEqual(self.reporte(metodo="BITCOIN").status_code, 400)
 
     def test_tiquete_anulado_no_cuenta(self):
-        self.client.post("/api/tiquetes/PC-000001/anular/", {"motivo": "Cobro duplicado"}, format="json")
+        self.client.post(f"/api/tiquetes/{self.codigo_abc}/anular/", {"motivo": "Cobro duplicado"}, format="json")
         self.assertEqual(self.reporte().data["total"], 184000)
 
     def test_exportar_pdf(self):
@@ -130,17 +130,17 @@ class AnulacionTests(OperacionTestBase):
 
     def test_trabajador_no_anula(self):
         self.como_trabajador()
-        r = self.client.post("/api/tiquetes/PC-000001/anular/", {"motivo": "Error de digitación"}, format="json")
+        r = self.client.post(f"/api/tiquetes/{self.codigo_abc}/anular/", {"motivo": "Error de digitación"}, format="json")
         self.assertEqual(r.status_code, 403)
 
     def test_motivo_obligatorio(self):
         self.como_admin()
-        r = self.client.post("/api/tiquetes/PC-000001/anular/", {"motivo": "  no "}, format="json")
+        r = self.client.post(f"/api/tiquetes/{self.codigo_abc}/anular/", {"motivo": "  no "}, format="json")
         self.assertIn("motivo", r.data)
 
     def test_anular_abierto_libera_el_espacio(self):
         self.como_admin()
-        r = self.client.post("/api/tiquetes/PC-000001/anular/", {"motivo": "Entrada registrada por error"}, format="json")
+        r = self.client.post(f"/api/tiquetes/{self.codigo_abc}/anular/", {"motivo": "Entrada registrada por error"}, format="json")
         self.assertEqual(r.status_code, 200, r.data)
         self.assertEqual(r.data["estado"], "ANULADO")
         self.assertEqual(r.data["motivo_anulacion"], "Entrada registrada por error")
@@ -152,10 +152,10 @@ class AnulacionTests(OperacionTestBase):
 
     def test_no_se_anula_dos_veces_ni_se_cobra_un_anulado(self):
         self.como_admin()
-        self.client.post("/api/tiquetes/PC-000001/anular/", {"motivo": "Error de digitación"}, format="json")
-        r = self.client.post("/api/tiquetes/PC-000001/anular/", {"motivo": "Error de digitación"}, format="json")
+        self.client.post(f"/api/tiquetes/{self.codigo_abc}/anular/", {"motivo": "Error de digitación"}, format="json")
+        r = self.client.post(f"/api/tiquetes/{self.codigo_abc}/anular/", {"motivo": "Error de digitación"}, format="json")
         self.assertEqual(r.status_code, 400)
-        r = self.client.post("/api/tiquetes/PC-000001/salida/", {"metodo": "EFECTIVO"}, format="json")
+        r = self.client.post(f"/api/tiquetes/{self.codigo_abc}/salida/", {"metodo": "EFECTIVO"}, format="json")
         self.assertEqual(r.status_code, 400)
 
 
@@ -191,7 +191,7 @@ class PermisosPorRolTests(OperacionTestBase):
         ("post", "/api/espacios/lote/"),
         ("put", "/api/parqueadero/"),
         ("post", "/api/planes-mensuales/"),
-        ("post", "/api/tiquetes/PC-000001/anular/"),
+        ("post", "/api/tiquetes/PC-NOEXISTE/anular/"),
         ("get", "/api/reportes/ingresos/"),
         ("get", "/api/bitacora/"),
         ("get", "/api/bitacora/acciones/"),

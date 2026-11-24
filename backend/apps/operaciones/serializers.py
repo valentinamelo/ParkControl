@@ -26,7 +26,7 @@ class TiqueteSerializer(serializers.ModelSerializer):
         model = Tiquete
         fields = [
             "id", "codigo", "placa", "tipo_vehiculo", "vehiculo_descripcion", "espacio",
-            "fecha_entrada", "fecha_salida", "minutos", "minutos_transcurridos", "valor", "multa",
+            "fecha_entrada", "fecha_salida", "minutos", "minutos_transcurridos", "valor", "multa", "noches",
             "estado", "estado_display", "es_mensualidad", "usuario_entrada", "usuario_salida", "metodo_pago",
             "motivo_anulacion",
         ]

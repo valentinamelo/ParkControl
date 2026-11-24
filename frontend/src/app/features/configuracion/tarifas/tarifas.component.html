@@ -17,7 +17,7 @@
     <div class="tabla-wrap">
       <table>
         <thead>
-          <tr><th>Tipo</th><th>Modalidad</th><th>Valor</th><th>Gracia</th><th>Tope diario</th><th></th></tr>
+          <tr><th>Tipo</th><th>Modalidad</th><th>Valor</th><th>Gracia</th><th>Tope diario</th><th>Pernoctación</th><th></th></tr>
         </thead>
         <tbody>
           @for (t of tarifas(); track t.id) {
@@ -27,6 +27,7 @@
               <td>{{ pesos(t.valor) }} / {{ t.minutos_fraccion }} min</td>
               <td>{{ t.minutos_gracia }} min</td>
               <td>{{ t.tope_diario ? pesos(t.tope_diario) : 'Sin tope' }}</td>
+              <td>{{ t.valor_pernoctacion ? pesos(t.valor_pernoctacion) + ' / noche' : 'No se cobra' }}</td>
               <td>
                 <button class="btn btn-borde btn-sm" type="button" (click)="abrirFormulario(t)">
                   <i aria-hidden="true" class="fa-solid fa-pen"></i>Cambiar
@@ -34,12 +35,12 @@
               </td>
             </tr>
           } @empty {
-            <tr><td colspan="6" class="vacio">Sin tarifas configuradas.</td></tr>
+            <tr><td colspan="7" class="vacio">Sin tarifas configuradas.</td></tr>
           }
           @for (tipo of tiposSinTarifa(); track tipo.id) {
             <tr>
               <td><b>{{ tipo.nombre }}</b></td>
-              <td colspan="4" class="nota">Sin tarifa: no se podrá cobrar a este tipo de vehículo.</td>
+              <td colspan="5" class="nota">Sin tarifa: no se podrá cobrar a este tipo de vehículo.</td>
               <td>
                 <button class="btn btn-primario btn-sm" type="button" (click)="abrirFormulario(null, tipo.id)">
                   <i aria-hidden="true" class="fa-solid fa-plus"></i>Crear
@@ -56,7 +57,7 @@
       <div class="tabla-wrap">
         <table>
           <thead>
-            <tr><th>Desde</th><th>Tipo</th><th>Modalidad</th><th>Valor</th><th>Gracia</th><th>Tope diario</th></tr>
+            <tr><th>Desde</th><th>Tipo</th><th>Modalidad</th><th>Valor</th><th>Gracia</th><th>Tope diario</th><th>Pernoctación</th></tr>
           </thead>
           <tbody>
             @for (t of anteriores; track t.id) {
@@ -67,9 +68,10 @@
                 <td>{{ pesos(t.valor) }} / {{ t.minutos_fraccion }} min</td>
                 <td>{{ t.minutos_gracia }} min</td>
                 <td>{{ t.tope_diario ? pesos(t.tope_diario) : 'Sin tope' }}</td>
+                <td>{{ t.valor_pernoctacion ? pesos(t.valor_pernoctacion) : '—' }}</td>
               </tr>
             } @empty {
-              <tr><td colspan="6" class="vacio">Todavía no hay tarifas anteriores.</td></tr>
+              <tr><td colspan="7" class="vacio">Todavía no hay tarifas anteriores.</td></tr>
             }
           </tbody>
         </table>
@@ -143,7 +145,17 @@
           <input class="input" id="tope" type="number" min="1" step="100" formControlName="tope_diario" [class.invalido]="errorDe('tope_diario')" />
           @if (errorDe('tope_diario')) { <small class="error">{{ errorDe('tope_diario') }}</small> }
         </div>
+        <div class="campo">
+          <label for="pernoctacion">Pernoctación ($ por noche, opcional)</label>
+          <input class="input" id="pernoctacion" type="number" min="1" step="1000" formControlName="valor_pernoctacion"
+                 [class.invalido]="errorDe('valor_pernoctacion')" />
+          @if (errorDe('valor_pernoctacion')) { <small class="error">{{ errorDe('valor_pernoctacion') }}</small> }
+        </div>
       </div>
+      <p class="nota" style="margin-bottom: 12px">
+        Con pernoctación, las horas se cobran solo dentro del horario de atención y cada noche que el vehículo
+        pasa dentro con el parqueadero cerrado se cobra aparte. Vacío: se cobra el tiempo corrido.
+      </p>
       <div class="acciones">
         <button class="btn btn-borde" type="button" (click)="modalAbierto.set(false)">Cancelar</button>
         <button class="btn btn-primario" type="submit" [disabled]="guardando()">

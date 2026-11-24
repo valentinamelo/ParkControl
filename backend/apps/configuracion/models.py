@@ -47,6 +47,10 @@ class Tarifa(models.Model):
     minutos_fraccion = models.PositiveIntegerField(default=60)
     minutos_gracia = models.PositiveIntegerField(default=0)
     tope_diario = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
+    # Valor por cada noche que el vehículo pasa dentro con el parqueadero cerrado (vacío: sin pernoctación)
+    valor_pernoctacion = models.DecimalField(
+        "valor de pernoctación por noche", max_digits=10, decimal_places=0, null=True, blank=True
+    )
     vigente = models.BooleanField(default=True)
     creada = models.DateTimeField(auto_now_add=True)
 
@@ -56,7 +60,10 @@ class Tarifa(models.Model):
         ordering = ["tipo_vehiculo__nombre", "-creada"]
 
     def __str__(self):
-        return f"{self.tipo_vehiculo} - ${self.valor} ({self.get_modalidad_display()})"
+        texto = f"{self.tipo_vehiculo} - ${self.valor} ({self.get_modalidad_display()})"
+        if self.valor_pernoctacion:
+            texto += f", pernoctación ${self.valor_pernoctacion}"
+        return texto
 
 
 class Horario(models.Model):

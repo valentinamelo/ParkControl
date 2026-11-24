@@ -21,6 +21,7 @@ class Tiquete(models.Model):
     minutos = models.PositiveIntegerField(null=True, blank=True)
     valor = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
     multa = models.DecimalField("multa por tiquete perdido", max_digits=10, decimal_places=0, default=0)
+    noches = models.PositiveIntegerField("noches de pernoctación cobradas", default=0)
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ABIERTO)
     es_mensualidad = models.BooleanField(default=False)
     motivo_anulacion = models.CharField(max_length=200, blank=True)
