@@ -5,16 +5,6 @@
   </div>
 </header>
 
-@if (ultimaSalida(); as s) {
-  <div class="exito">
-    <i aria-hidden="true" class="fa-solid fa-circle-check"></i>
-    Salida de <b>{{ s.placa }}</b> registrada ({{ s.codigo }}, {{ duracion(s.minutos ?? 0) }}):
-    <b>{{ s.es_mensualidad ? 'mensualidad, sin cobro' : pesos(s.valor) }}</b>
-    @if (s.metodo_pago) { · {{ s.metodo_pago }} }
-    · <a class="enlace-tabla" [routerLink]="['/movimientos/tiquete', s.codigo]">Ver recibo</a>
-  </div>
-}
-
 <div class="grid-2">
   <section class="card">
     <form (ngSubmit)="buscar()">

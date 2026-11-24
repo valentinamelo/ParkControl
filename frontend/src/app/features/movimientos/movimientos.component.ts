@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, merge, switchMap, timer } from 'rxjs';
 
 import { ApiService } from '../../core/api.service';
@@ -28,6 +28,10 @@ export class MovimientosComponent implements OnInit {
   protected disponibles = signal(0);
   protected cargando = signal(true);
   protected error = signal('');
+  /** Salida recién registrada: llega desde la pantalla de salida en el estado de la navegación. */
+  protected ultimaSalida = signal<Tiquete | null>(
+    inject(Router).currentNavigation()?.extras.state?.['salida'] ?? null,
+  );
   protected duracion = duracion;
   protected pesos = pesos;
 

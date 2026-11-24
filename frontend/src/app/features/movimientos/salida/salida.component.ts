@@ -1,8 +1,8 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ApiService } from '../../../core/api.service';
 import { mensajeError } from '../../../core/errores';
@@ -31,9 +31,10 @@ export function normalizarCodigo(texto: string): string | null {
   templateUrl: './salida.component.html',
   styleUrl: './salida.component.css',
 })
-export class SalidaComponent implements OnInit {
+export class SalidaComponent implements OnInit, AfterViewInit {
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private campo = viewChild.required<ElementRef<HTMLInputElement>>('campo');
 
   protected texto = '';
@@ -43,7 +44,6 @@ export class SalidaComponent implements OnInit {
   protected buscando = signal(false);
   protected guardando = signal(false);
   protected error = signal('');
-  protected ultimaSalida = signal<Tiquete | null>(null);
   protected camara = signal(false);
 
   protected metodos = METODOS_PAGO;
@@ -58,12 +58,16 @@ export class SalidaComponent implements OnInit {
     }
   }
 
+  /** autofocus solo actúa al cargar la página; al llegar desde Movimientos se enfoca aquí para el lector. */
+  ngAfterViewInit(): void {
+    this.campo().nativeElement.focus();
+  }
+
   /** El lector USB escribe el código y envía Enter, que dispara esta búsqueda. */
   buscar(): void {
     const texto = this.texto.trim();
     if (!texto) return;
     this.error.set('');
-    this.ultimaSalida.set(null);
     this.tiquete.set(null);
     this.buscando.set(true);
 
@@ -121,11 +125,8 @@ export class SalidaComponent implements OnInit {
       ...(t.cobro.total > 0 ? { metodo: this.metodo() } : {}),
     };
     this.api.registrarSalida(t.codigo, datos).subscribe({
-      next: (cerrado) => {
-        this.guardando.set(false);
-        this.ultimaSalida.set(cerrado);
-        this.limpiar();
-      },
+      // Vuelve a Movimientos y allí se muestra el resumen de la salida
+      next: (cerrado) => this.router.navigate(['/movimientos'], { state: { salida: cerrado } }),
       error: (e: HttpErrorResponse) => {
         this.guardando.set(false);
         this.error.set(mensajeError(e));

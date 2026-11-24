@@ -31,10 +31,14 @@ test.describe('Operación del parqueadero (avance 3)', () => {
       await page.getByRole('radio', { name: 'Tarjeta' }).click();
     }
     await cobrar.click();
+    // Vuelve a Movimientos con el resumen de la salida
+    await expect(page).toHaveURL(/\/movimientos$/);
     await expect(page.locator('.exito')).toContainText(placa);
-    await expect(campo).toBeFocused(); // listo para el siguiente vehículo
+    await expect(page.locator('.exito')).toContainText(codigo);
 
     // El mismo tiquete ya no se puede cobrar otra vez
+    await page.getByRole('link', { name: 'Registrar salida' }).click();
+    await expect(campo).toBeFocused();
     await campo.fill(codigo);
     await campo.press('Enter');
     await expect(page.locator('.alerta')).toContainText('ya está cerrado');
@@ -76,6 +80,7 @@ test.describe('Operación del parqueadero (avance 3)', () => {
     await expect(page.getByRole('checkbox', { name: /Tiquete perdido/ })).toBeChecked();
     await expect(page.locator('.cuenta')).toContainText('Multa por tiquete perdido');
     await page.getByRole('button', { name: /^Cobrar/ }).click();
+    await expect(page).toHaveURL(/\/movimientos$/);
     await expect(page.locator('.exito')).toContainText(placa);
   });
 
@@ -98,6 +103,7 @@ test.describe('Operación del parqueadero (avance 3)', () => {
     await page.goto(`/movimientos/salida?codigo=${codigo}`);
     await expect(page.getByText('Mensualidad vigente: no se cobra el tiempo.')).toBeVisible();
     await page.getByRole('button', { name: 'Dar salida' }).click();
+    await expect(page).toHaveURL(/\/movimientos$/);
     await expect(page.locator('.exito')).toContainText('mensualidad, sin cobro');
   });
 });

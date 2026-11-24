@@ -25,7 +25,6 @@
 .metodo i { font-size: 1.1rem; }
 .metodo:hover { border-color: var(--negro); }
 .metodo.elegido { background: var(--amarillo); border-color: var(--amarillo); font-weight: 600; }
-.exito i { margin-right: 6px; }
 
 @media (max-width: 600px) {
   .lector { flex-wrap: wrap; }
