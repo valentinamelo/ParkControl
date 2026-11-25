@@ -175,4 +175,33 @@ test.describe('Administración (avances 2 y 4)', () => {
     await expect(page.locator('.exito')).toContainText(`${zona}-01 a ${zona}-03`);
     await expect(page.getByRole('heading', { name: new RegExp(`Zona ${zona}`) })).toBeVisible();
   });
+
+  test('desactiva, activa y elimina una zona libre; una zona con vehículos no se elimina', async ({ page }) => {
+    await iniciarSesion(page, ADMIN);
+    page.on('dialog', (d) => d.accept()); // confirmaciones
+    await page.goto('/espacios');
+    const zona = 'Y' + Math.floor(Math.random() * 900 + 100);
+    await page.getByRole('button', { name: 'Agregar espacios' }).click();
+    const modal = page.getByRole('dialog');
+    await modal.getByLabel('Zona', { exact: true }).fill(zona);
+    await modal.getByLabel('Cantidad').fill('2');
+    await modal.getByRole('button', { name: 'Crear espacios' }).click();
+    const titulo = page.getByRole('heading', { name: new RegExp(`Zona ${zona}`) });
+    await expect(titulo).toBeVisible();
+
+    await page.getByRole('button', { name: `Desactivar zona ${zona}` }).click();
+    await expect(page.locator('.exito')).toContainText(`Zona ${zona} desactivada`);
+    await expect(titulo).toContainText('Inactiva');
+
+    await page.getByRole('button', { name: `Activar zona ${zona}` }).click();
+    await expect(page.locator('.exito')).toContainText(`Zona ${zona} activada`);
+    await expect(titulo).not.toContainText('Inactiva');
+
+    await page.getByRole('button', { name: `Eliminar zona ${zona}` }).click();
+    await expect(page.locator('.exito')).toContainText(`Zona ${zona} eliminada`);
+    await expect(titulo).toBeHidden();
+
+    // La zona A siempre tiene un vehículo dentro en los datos iniciales (ABC123 en A-02)
+    await expect(page.getByRole('button', { name: 'Eliminar zona A', exact: true })).toBeDisabled();
+  });
 });

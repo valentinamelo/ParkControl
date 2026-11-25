@@ -88,6 +88,16 @@ export class ApiService {
     return this.http.patch<Zona>(`${this.url}/zonas/${id}/`, datos);
   }
 
+  /** Desactiva todos los espacios de la zona; falla si alguno está ocupado o reservado por una mensualidad. */
+  desactivarZona(id: number): Observable<Zona> {
+    return this.http.post<Zona>(`${this.url}/zonas/${id}/desactivar/`, {});
+  }
+
+  activarZona(id: number): Observable<Zona> {
+    return this.http.post<Zona>(`${this.url}/zonas/${id}/activar/`, {});
+  }
+
+  /** Elimina la zona con todos sus espacios, si están libres y sin movimientos registrados. */
   eliminarZona(id: number): Observable<void> {
     return this.http.delete<void>(`${this.url}/zonas/${id}/`);
   }

@@ -17,6 +17,8 @@ interface GrupoZona {
   zona: string;
   tipo: string;
   espacios: Espacio[];
+  /** Todos sus espacios están inactivos */
+  inactiva: boolean;
 }
 
 @Component({
@@ -54,9 +56,11 @@ export class EspaciosComponent implements OnInit {
     const grupos = new Map<string, GrupoZona>();
     for (const e of this.espacios()) {
       if (!grupos.has(e.zona_nombre)) {
-        grupos.set(e.zona_nombre, { zona: e.zona_nombre, tipo: e.tipo_vehiculo, espacios: [] });
+        grupos.set(e.zona_nombre, { zona: e.zona_nombre, tipo: e.tipo_vehiculo, espacios: [], inactiva: true });
       }
-      grupos.get(e.zona_nombre)!.espacios.push(e);
+      const grupo = grupos.get(e.zona_nombre)!;
+      grupo.espacios.push(e);
+      grupo.inactiva &&= e.estado === 'INACTIVO';
     }
     return [...grupos.values()];
   });
@@ -153,8 +157,26 @@ export class EspaciosComponent implements OnInit {
     );
   }
 
+  /** Una zona está inactiva cuando todos sus espacios lo están. */
+  protected zonaInactiva(zona: Zona): boolean {
+    return zona.total_espacios > 0 && zona.espacios_inactivos === zona.total_espacios;
+  }
+
+  /** Activa o desactiva todos los espacios de la zona. El backend exige que estén libres. */
+  cambiarEstadoZona(zona: Zona): void {
+    if (this.zonaInactiva(zona)) {
+      this.ejecutar(this.api.activarZona(zona.id), `Zona ${zona.nombre} activada: sus espacios vuelven a estar disponibles.`);
+      return;
+    }
+    if (!confirm(`¿Desactivar la zona ${zona.nombre}? Sus ${zona.total_espacios} espacios dejarán de ofrecerse para nuevas entradas.`)) return;
+    this.ejecutar(this.api.desactivarZona(zona.id), `Zona ${zona.nombre} desactivada.`);
+  }
+
   eliminarZona(zona: Zona): void {
-    if (!confirm(`¿Eliminar la zona ${zona.nombre}?`)) return;
+    const espacios = zona.total_espacios === 1 ? 'su espacio' : `sus ${zona.total_espacios} espacios`;
+    const pregunta = zona.total_espacios ? `¿Eliminar la zona ${zona.nombre} y ${espacios}?` : `¿Eliminar la zona ${zona.nombre}?`;
+    if (!confirm(`${pregunta} Si solo quieres dejar de usarla, desactívala.`)) return;
+    if (this.seleccionado()?.zona === zona.id) this.seleccionado.set(null);
     this.ejecutar(this.api.eliminarZona(zona.id), `Zona ${zona.nombre} eliminada.`);
   }
 

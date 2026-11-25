@@ -26,3 +26,8 @@ h2 + .mapa { margin-bottom: 24px; }
 .detalle .acciones { margin-top: 16px; }
 .lateral td { padding: 8px 6px; }
 .lateral select.input { padding: 6px 8px; }
+
+.etiqueta-inactiva {
+  margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+  background: var(--linea); color: var(--texto-suave); vertical-align: middle;
+}

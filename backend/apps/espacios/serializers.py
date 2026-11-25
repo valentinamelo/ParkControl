@@ -9,11 +9,17 @@ from .models import Espacio, Zona
 
 class ZonaSerializer(serializers.ModelSerializer):
     tipo_vehiculo_nombre = serializers.CharField(source="tipo_vehiculo.nombre", read_only=True)
-    total_espacios = serializers.IntegerField(source="espacios.count", read_only=True)
+    # Conteos anotados en ZonaViewSet.get_queryset (una zona recién creada no tiene espacios)
+    total_espacios = serializers.IntegerField(read_only=True, default=0)
+    espacios_ocupados = serializers.IntegerField(read_only=True, default=0)
+    espacios_inactivos = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Zona
-        fields = ["id", "nombre", "tipo_vehiculo", "tipo_vehiculo_nombre", "total_espacios"]
+        fields = [
+            "id", "nombre", "tipo_vehiculo", "tipo_vehiculo_nombre",
+            "total_espacios", "espacios_ocupados", "espacios_inactivos",
+        ]
         extra_kwargs = {"nombre": {"validators": []}}  # se valida en validate_nombre
 
     def validate_nombre(self, valor):

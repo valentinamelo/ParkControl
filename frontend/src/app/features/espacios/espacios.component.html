@@ -23,7 +23,10 @@
 <div class="grid-2">
   <section class="card">
     @for (grupo of zonas(); track grupo.zona) {
-      <h2>Zona {{ grupo.zona }} <span class="nota">· {{ grupo.tipo }}</span></h2>
+      <h2>
+        Zona {{ grupo.zona }} <span class="nota">· {{ grupo.tipo }}</span>
+        @if (grupo.inactiva) { <span class="etiqueta-inactiva">Inactiva</span> }
+      </h2>
       <div class="mapa">
         @for (e of grupo.espacios; track e.id) {
           <button
@@ -78,34 +81,59 @@
     @if (auth.esAdmin()) {
       <section class="card">
         <h2>Zonas</h2>
-        <table>
-          <thead>
-            <tr><th>Zona</th><th>Tipo de vehículo</th><th>Espacios</th><th></th></tr>
-          </thead>
-          <tbody>
-            @for (z of listaZonas(); track z.id) {
-              <tr>
-                <td><b>{{ z.nombre }}</b></td>
-                <td>
-                  <select class="input" [attr.aria-label]="'Tipo de vehículo de la zona ' + z.nombre" (change)="cambiarTipoZona(z, $any($event.target).value)">
-                    @for (t of tipos(); track t.id) {
-                      <option [value]="t.id" [selected]="t.id === z.tipo_vehiculo">{{ t.nombre }}</option>
+        <div class="tabla-wrap">
+          <table>
+            <thead>
+              <tr><th>Zona</th><th>Tipo de vehículo</th><th>Espacios</th><th>Estado</th><th></th></tr>
+            </thead>
+            <tbody>
+              @for (z of listaZonas(); track z.id) {
+                <tr>
+                  <td><b>{{ z.nombre }}</b></td>
+                  <td>
+                    <select class="input" [attr.aria-label]="'Tipo de vehículo de la zona ' + z.nombre" (change)="cambiarTipoZona(z, $any($event.target).value)">
+                      @for (t of tipos(); track t.id) {
+                        <option [value]="t.id" [selected]="t.id === z.tipo_vehiculo">{{ t.nombre }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td>{{ z.total_espacios }}</td>
+                  <td>
+                    @if (z.espacios_ocupados) {
+                      {{ z.espacios_ocupados }} {{ z.espacios_ocupados === 1 ? 'ocupado' : 'ocupados' }}
+                    } @else if (zonaInactiva(z)) {
+                      Inactiva
+                    } @else {
+                      Libre
                     }
-                  </select>
-                </td>
-                <td>{{ z.total_espacios }}</td>
-                <td>
-                  @if (z.total_espacios === 0) {
-                    <button class="btn btn-peligro btn-sm" type="button" (click)="eliminarZona(z)" [attr.aria-label]="'Eliminar zona ' + z.nombre">
-                      <i aria-hidden="true" class="fa-solid fa-trash"></i>
-                    </button>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        <p class="nota" style="margin-top: 12px">Cada espacio admite el tipo de vehículo de su zona.</p>
+                  </td>
+                  <td>
+                    <div class="acciones-fila">
+                      @if (z.total_espacios) {
+                        <button class="btn btn-borde btn-sm" type="button" (click)="cambiarEstadoZona(z)"
+                                [disabled]="z.espacios_ocupados > 0 && !zonaInactiva(z)"
+                                [title]="z.espacios_ocupados ? 'Tiene vehículos dentro: registra su salida primero' : ''"
+                                [attr.aria-label]="(zonaInactiva(z) ? 'Activar zona ' : 'Desactivar zona ') + z.nombre">
+                          <i aria-hidden="true" class="fa-solid" [class.fa-ban]="!zonaInactiva(z)" [class.fa-check]="zonaInactiva(z)"></i>
+                        </button>
+                      }
+                      <button class="btn btn-peligro btn-sm" type="button" (click)="eliminarZona(z)"
+                              [disabled]="z.espacios_ocupados > 0"
+                              [title]="z.espacios_ocupados ? 'Tiene vehículos dentro: registra su salida primero' : ''"
+                              [attr.aria-label]="'Eliminar zona ' + z.nombre">
+                        <i aria-hidden="true" class="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="nota" style="margin-top: 12px">
+          Cada espacio admite el tipo de vehículo de su zona. Una zona solo se desactiva o elimina con todos sus
+          espacios libres; si ya tuvo movimientos, desactívala para conservar el historial.
+        </p>
       </section>
     }
   </div>
