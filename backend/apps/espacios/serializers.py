@@ -57,13 +57,14 @@ class EspacioSerializer(serializers.ModelSerializer):
         )
         if tiquete is None:
             return None
-        minutos = int((timezone.now() - tiquete.fecha_entrada).total_seconds() // 60)
+        segundos = max(0, int((timezone.now() - tiquete.fecha_entrada).total_seconds()))
         return {
             "tiquete": tiquete.codigo,
             "placa": tiquete.vehiculo.placa,
             "tipo_vehiculo": tiquete.vehiculo.tipo_vehiculo.nombre,
             "fecha_entrada": tiquete.fecha_entrada,
-            "minutos": minutos,
+            "minutos": segundos // 60,
+            "segundos": segundos,
             "es_mensualidad": tiquete.es_mensualidad,
         }
 

@@ -87,6 +87,25 @@ class CalculoTarifaTests(SimpleTestCase):
         # La primera hora se cobra una sola vez: el segundo día empieza con horas normales
         self.assertEqual(calcular_valor(t, 24 * 60 + 30), 33000)
 
+    def test_menos_de_un_minuto_si_se_cobra(self):
+        # Antes 30 segundos daban 0 minutos y $0; ahora cada minuto empezado cuenta
+        entrada = timezone.now()
+        cobro = calcular_cobro(tarifa(), entrada, entrada + timedelta(seconds=30))
+        self.assertEqual((cobro["segundos"], cobro["minutos"], cobro["minutos_cobrados"]), (30, 0, 1))
+        self.assertEqual(cobro["valor"], 4000)
+        self.assertEqual(calcular_cobro(tarifa(), entrada, entrada)["valor"], 0)  # 0 segundos: nada
+
+    def test_un_segundo_de_mas_pasa_a_la_siguiente_fraccion(self):
+        entrada = timezone.now()
+        self.assertEqual(calcular_cobro(tarifa(), entrada, entrada + timedelta(minutes=60))["valor"], 4000)
+        self.assertEqual(calcular_cobro(tarifa(), entrada, entrada + timedelta(minutes=60, seconds=1))["valor"], 8000)
+
+    def test_gracia_se_mide_en_segundos(self):
+        entrada = timezone.now()
+        t = tarifa(gracia=10)
+        self.assertEqual(calcular_cobro(t, entrada, entrada + timedelta(minutes=10))["valor"], 0)
+        self.assertEqual(calcular_cobro(t, entrada, entrada + timedelta(minutes=10, seconds=1))["valor"], 4000)
+
     def test_minutos_completos(self):
         entrada = timezone.now()
         self.assertEqual(minutos_entre(entrada, entrada + timedelta(minutes=165, seconds=59)), 165)
@@ -214,6 +233,19 @@ class SalidaTests(OperacionTestBase):
         self.assertEqual(Pago.objects.get(tiquete__codigo=self.codigo).valor, 12000)
         self.assertEqual(Espacio.objects.get(codigo="A-01").estado, "DISPONIBLE")
         self.assertTrue(Bitacora.objects.filter(accion="SALIDA", detalle__contains=self.codigo).exists())
+
+    def test_salida_a_los_pocos_segundos_cobra_y_guarda_los_segundos(self):
+        codigo = self.codigo
+        Tiquete.objects.filter(codigo=codigo).update(fecha_entrada=timezone.now() - timedelta(seconds=40))
+        cobro = self.client.get(f"/api/tiquetes/{codigo}/").data["cobro"]
+        self.assertEqual(cobro["minutos"], 0)
+        self.assertGreaterEqual(cobro["segundos"], 40)
+        self.assertEqual(cobro["total"], 4000)
+        r = self.client.post(f"/api/tiquetes/{codigo}/salida/", {"metodo": "EFECTIVO"}, format="json")
+        self.assertEqual(r.status_code, 200, r.data)
+        self.assertEqual(r.data["valor"], "4000")
+        self.assertGreaterEqual(r.data["segundos_transcurridos"], 40)
+        self.assertGreaterEqual(Tiquete.objects.get(codigo=codigo).segundos, 40)
 
     def test_no_se_cierra_dos_veces(self):
         self.client.post(f"/api/tiquetes/{self.codigo}/salida/", {"metodo": "EFECTIVO"}, format="json")

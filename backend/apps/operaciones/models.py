@@ -19,6 +19,8 @@ class Tiquete(models.Model):
     fecha_entrada = models.DateTimeField()
     fecha_salida = models.DateTimeField(null=True, blank=True)
     minutos = models.PositiveIntegerField(null=True, blank=True)
+    # Duración exacta de la estadía (los tiquetes cerrados antes de este campo solo tienen minutos)
+    segundos = models.PositiveIntegerField(null=True, blank=True)
     valor = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
     multa = models.DecimalField("multa por tiquete perdido", max_digits=10, decimal_places=0, default=0)
     noches = models.PositiveIntegerField("noches de pernoctación cobradas", default=0)

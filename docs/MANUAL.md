@@ -53,7 +53,7 @@ En lugar del código, escribe la **placa** y pulsa **Buscar**. ParkControl marca
 
 ### ¿Cuánto se cobra?
 
-Se cobra cada hora (o fracción, según la tarifa) empezada. Por ejemplo, con $4.000 la hora, 2 horas y 45 minutos se cobran como 3 horas: **$12.000**. Si la tarifa tiene minutos de gracia y el vehículo sale antes de que terminen, no paga. El total de un día nunca pasa del tope diario.
+Se cobra cada hora (o fracción, según la tarifa) empezada. Por ejemplo, con $4.000 la hora, 2 horas y 45 minutos se cobran como 3 horas: **$12.000**. El tiempo se cuenta en segundos: aunque el vehículo salga a los pocos segundos, ya empezó su primera hora y la paga. Si la tarifa tiene minutos de gracia y el vehículo sale antes de que terminen, no paga. El total de un día nunca pasa del tope diario.
 
 Si la tarifa tiene un **valor de primera hora**, esa hora cuesta distinto y lo demás se cobra con el valor normal. Por ejemplo, con $5.000 la primera hora y $1.000 cada 15 minutos, 1 hora y 20 minutos se cobran **$7.000** ($5.000 + 2 fracciones de $1.000).
 

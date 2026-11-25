@@ -35,6 +35,8 @@ test.describe('Operación del parqueadero (avance 3)', () => {
     await expect(page).toHaveURL(/\/movimientos$/);
     await expect(page.locator('.exito')).toContainText(placa);
     await expect(page.locator('.exito')).toContainText(codigo);
+    // Recién entró: el tiempo se muestra en segundos y no queda en 0 minutos sin cobro
+    await expect(page.locator('.exito')).toContainText(/\d+s\): \$[1-9]/);
 
     // El mismo tiquete ya no se puede cobrar otra vez
     await page.getByRole('link', { name: 'Registrar salida' }).click();

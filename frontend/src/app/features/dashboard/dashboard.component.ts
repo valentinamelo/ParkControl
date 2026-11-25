@@ -8,7 +8,7 @@ import { EMPTY, catchError, forkJoin, switchMap, timer } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { mensajeError } from '../../core/errores';
-import { duracion, pesos } from '../../core/formato';
+import { tiempo, pesos } from '../../core/formato';
 import { DashboardResumen, Tiquete } from '../../core/models';
 import { BarrasComponent } from '../../shared/graficos/barras.component';
 import { ColumnasComponent } from '../../shared/graficos/columnas.component';
@@ -30,7 +30,7 @@ export class DashboardComponent implements OnInit {
   protected resumen = signal<DashboardResumen | null>(null);
   protected dentro = signal<Tiquete[]>([]);
   protected error = signal('');
-  protected duracion = duracion;
+  protected tiempo = tiempo;
   protected pesos = pesos;
 
   ngOnInit(): void {

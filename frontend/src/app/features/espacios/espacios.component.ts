@@ -8,7 +8,7 @@ import { Observable, timer } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { erroresDeCampo, mensajeError } from '../../core/errores';
-import { duracion } from '../../core/formato';
+import { tiempo } from '../../core/formato';
 import { Espacio, TipoVehiculo, Zona } from '../../core/models';
 import { ModalComponent } from '../../shared/modal/modal.component';
 import { INTERVALO_ACTUALIZACION } from '../movimientos/movimientos.component';
@@ -34,7 +34,7 @@ export class EspaciosComponent implements OnInit {
   protected seleccionado = signal<Espacio | null>(null);
   protected error = signal('');
   protected aviso = signal('');
-  protected duracion = duracion;
+  protected tiempo = tiempo;
 
   // Solo para el administrador
   protected listaZonas = signal<Zona[]>([]);

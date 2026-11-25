@@ -35,7 +35,7 @@
         <div><dt>Tipo</dt><dd>{{ t.tipo_vehiculo }}</dd></div>
         <div><dt>Espacio</dt><dd>{{ t.espacio }}</dd></div>
         <div><dt>Entrada</dt><dd>{{ t.fecha_entrada | date: 'dd/MM/yyyy hh:mm a' }}</dd></div>
-        <div><dt>Tiempo</dt><dd>{{ duracion(t.cobro?.minutos ?? 0) }}</dd></div>
+        <div><dt>Tiempo</dt><dd>{{ tiempo(t.cobro?.segundos ?? 0) }}</dd></div>
       </dl>
     }
   </section>
