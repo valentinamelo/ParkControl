@@ -15,7 +15,10 @@ class Tiquete(models.Model):
 
     codigo = models.CharField(max_length=20, unique=True)
     vehiculo = models.ForeignKey(Vehiculo, on_delete=models.PROTECT, related_name="tiquetes")
-    espacio = models.ForeignKey(Espacio, on_delete=models.PROTECT, related_name="tiquetes")
+    # Si el administrador elimina el espacio (o su zona), el tiquete se conserva sin el enlace
+    espacio = models.ForeignKey(Espacio, on_delete=models.SET_NULL, null=True, blank=True, related_name="tiquetes")
+    # Código del espacio al momento de la entrada: el historial lo sigue mostrando aunque el espacio ya no exista
+    espacio_codigo = models.CharField("espacio", max_length=10, blank=True)
     fecha_entrada = models.DateTimeField()
     fecha_salida = models.DateTimeField(null=True, blank=True)
     minutos = models.PositiveIntegerField(null=True, blank=True)
@@ -41,6 +44,11 @@ class Tiquete(models.Model):
 
     def __str__(self):
         return f"{self.codigo} - {self.vehiculo.placa} ({self.get_estado_display()})"
+
+    def save(self, *args, **kwargs):
+        if self.espacio_id and not self.espacio_codigo:
+            self.espacio_codigo = self.espacio.codigo
+        super().save(*args, **kwargs)
 
 
 class Pago(models.Model):

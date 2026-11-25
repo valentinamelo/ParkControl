@@ -30,6 +30,7 @@ class ZonaViewSet(BitacoraMixin, viewsets.ModelViewSet):
     Una zona completa se puede desactivar (POST /api/zonas/{id}/desactivar/), volver a activar
     (POST /api/zonas/{id}/activar/) o eliminar con todos sus espacios (DELETE), siempre que
     sus espacios estén libres: sin vehículos dentro ni reservados por una mensualidad vigente.
+    Al eliminarla, los tiquetes de sus espacios se conservan con el código del espacio.
     """
 
     serializer_class = ZonaSerializer
@@ -95,19 +96,16 @@ class ZonaViewSet(BitacoraMixin, viewsets.ModelViewSet):
 
     @transaction.atomic
     def destroy(self, request, *args, **kwargs):
-        """Elimina la zona con todos sus espacios, si están libres y nunca se han usado."""
+        """
+        Elimina la zona con todos sus espacios, si están libres. Los tiquetes que usaron esos
+        espacios se conservan: guardan el código del espacio y solo pierden el enlace.
+        """
         zona = self.get_object()
         espacios = self._exigir_libre(zona, "eliminar")
-        con_historial = list(
-            Espacio.objects.filter(zona=zona, tiquetes__isnull=False).distinct().values_list("codigo", flat=True)
-        )
-        if con_historial:
-            raise ReglaNegocio(
-                f"No se puede eliminar la zona {zona.nombre}: {_lista(con_historial)} "
-                f"{'tiene' if len(con_historial) == 1 else 'tienen'} movimientos registrados que deben conservarse. "
-                "Desactiva la zona en lugar de eliminarla."
-            )
+        movimientos = Tiquete.objects.filter(espacio__zona=zona).count()
         detalle = f"{zona} con {len(espacios)} espacios"
+        if movimientos:
+            detalle += f" ({movimientos} movimientos conservados en el historial)"
         Espacio.objects.filter(zona=zona).delete()
         zona.delete()
         registrar(request.user, "ELIMINAR_ZONA", detalle)
@@ -146,11 +144,12 @@ class EspacioViewSet(BitacoraMixin, viewsets.ModelViewSet):
         espacio = self.get_object()
         if espacio.estado == Espacio.Estado.OCUPADO:
             return Response({"detail": "No se puede eliminar un espacio ocupado."}, status=status.HTTP_400_BAD_REQUEST)
-        if espacio.tiquetes.exists():
+        if espacio.pk in set(espacios_reservados().values_list("espacio_fijo", flat=True)):
             return Response(
-                {"detail": "El espacio tiene movimientos registrados; desactívalo en lugar de eliminarlo."},
+                {"detail": f"{espacio.codigo} es el espacio fijo de una mensualidad vigente. Cambia el espacio de esa mensualidad primero."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        # Sus tiquetes se conservan con el código del espacio (solo pierden el enlace)
         return super().destroy(request, *args, **kwargs)
 
     @action(detail=False, methods=["post"])
