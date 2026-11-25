@@ -31,3 +31,14 @@ h2 + .mapa { margin-bottom: 24px; }
   margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
   background: var(--linea); color: var(--texto-suave); vertical-align: middle;
 }
+
+/* Tabla de zonas: los botones de cada fila en una sola línea y compactos */
+.lateral .acciones-fila { flex-wrap: nowrap; }
+.lateral .acciones-fila .btn-sm { padding: 6px 9px; }
+.estado-zona { display: block; font-size: 0.75rem; color: var(--texto-suave); white-space: nowrap; }
+.estado-zona.con-vehiculos { color: var(--negro); font-weight: 600; }
+
+/* En pantallas anchas la columna derecha (detalle y zonas) tiene un poco más de espacio */
+@media (min-width: 1025px) {
+  .grid-espacios { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+}

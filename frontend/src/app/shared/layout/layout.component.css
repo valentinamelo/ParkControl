@@ -1,8 +1,8 @@
 .app { display: flex; min-height: 100vh; }
 
 .sidebar {
-  width: 240px; flex: none; background: var(--negro); color: var(--blanco);
-  padding: 28px 16px; display: flex; flex-direction: column;
+  width: 212px; flex: none; background: var(--negro); color: var(--blanco);
+  padding: 28px 12px; display: flex; flex-direction: column;
   position: sticky; top: 0; height: 100vh;
 }
 .logo { font-size: 1.2rem; font-weight: 700; padding: 0 12px 32px; }
@@ -23,10 +23,10 @@ nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .usuario b { font-size: 0.85rem; }
 .usuario span { font-size: 0.78rem; color: var(--amarillo); }
 
-main { flex: 1; padding: 36px 40px; min-width: 0; }
+main { flex: 1; padding: 36px 36px; min-width: 0; }
 
 @media (max-width: 1024px) {
-  .sidebar { width: 200px; }
+  .sidebar { width: 190px; }
   main { padding: 28px 24px; }
 }
 @media (max-width: 768px) {
