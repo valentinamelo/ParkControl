@@ -52,7 +52,7 @@
         <p><span>Estado</span><b>{{ e.estado_display }}</b></p>
         <p><span>Vehículo</span><b>{{ e.ocupante?.placa ?? '—' }}</b></p>
         <p><span>Hora de entrada</span><b>{{ e.ocupante ? (e.ocupante.fecha_entrada | date: 'hh:mm a') : '—' }}</b></p>
-        <p><span>Tiempo</span><b>{{ e.ocupante ? duracion(e.ocupante.minutos) : '—' }}</b></p>
+        <p><span>Tiempo</span><b>{{ e.ocupante ? tiempo(e.ocupante.segundos) : '—' }}</b></p>
         <p><span>Tiquete</span><b>{{ e.ocupante?.tiquete ?? '—' }}</b></p>
 
         @if (auth.esAdmin()) {

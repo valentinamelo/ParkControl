@@ -6,7 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ApiService } from '../../../core/api.service';
 import { mensajeError } from '../../../core/errores';
-import { duracion, pesos } from '../../../core/formato';
+import { duracion, tiempo, pesos } from '../../../core/formato';
 import { METODOS_PAGO, MetodoPago, Tiquete } from '../../../core/models';
 import { EscanerComponent } from '../../../shared/escaner/escaner.component';
 import { ModalComponent } from '../../../shared/modal/modal.component';
@@ -48,6 +48,7 @@ export class SalidaComponent implements OnInit, AfterViewInit {
 
   protected metodos = METODOS_PAGO;
   protected duracion = duracion;
+  protected tiempo = tiempo;
   protected pesos = pesos;
 
   ngOnInit(): void {

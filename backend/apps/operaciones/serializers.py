@@ -8,7 +8,7 @@ from apps.espacios.models import Espacio
 from apps.vehiculos.serializers import normalizar_placa
 
 from .models import Pago, Tiquete
-from .reglas import minutos_entre
+from .reglas import segundos_entre
 
 
 class TiqueteSerializer(serializers.ModelSerializer):
@@ -21,12 +21,13 @@ class TiqueteSerializer(serializers.ModelSerializer):
     usuario_salida = serializers.CharField(source="usuario_salida.get_full_name", read_only=True, default=None)
     metodo_pago = serializers.SerializerMethodField()
     minutos_transcurridos = serializers.SerializerMethodField()
+    segundos_transcurridos = serializers.SerializerMethodField()
 
     class Meta:
         model = Tiquete
         fields = [
             "id", "codigo", "placa", "tipo_vehiculo", "vehiculo_descripcion", "espacio",
-            "fecha_entrada", "fecha_salida", "minutos", "minutos_transcurridos", "valor", "multa", "noches",
+            "fecha_entrada", "fecha_salida", "minutos", "minutos_transcurridos", "segundos_transcurridos", "valor", "multa", "noches",
             "estado", "estado_display", "es_mensualidad", "usuario_entrada", "usuario_salida", "metodo_pago",
             "motivo_anulacion",
         ]
@@ -39,11 +40,17 @@ class TiqueteSerializer(serializers.ModelSerializer):
         pago = getattr(tiquete, "pago", None)  # el tiquete puede no tener pago (mensualidad o $0)
         return pago.get_metodo_display() if pago else None
 
-    def get_minutos_transcurridos(self, tiquete):
+    def get_segundos_transcurridos(self, tiquete):
         """Para tiquetes abiertos, el tiempo que lleva dentro; para cerrados, el que se cobró."""
         if tiquete.estado != Tiquete.Estado.ABIERTO:
-            return tiquete.minutos
-        return minutos_entre(tiquete.fecha_entrada, timezone.now())
+            if tiquete.segundos is not None:
+                return tiquete.segundos
+            return tiquete.minutos * 60 if tiquete.minutos is not None else None
+        return segundos_entre(tiquete.fecha_entrada, timezone.now())
+
+    def get_minutos_transcurridos(self, tiquete):
+        segundos = self.get_segundos_transcurridos(tiquete)
+        return None if segundos is None else segundos // 60
 
 
 class EntradaSerializer(serializers.Serializer):

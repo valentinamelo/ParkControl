@@ -16,7 +16,7 @@ from parkcontrol.excepciones import ReglaNegocio
 
 from .codigos import generar_codigo, normalizar_codigo
 from .models import Pago, Tiquete
-from .reglas import calcular_cobro, dentro_de_horario, horarios_por_dia, minutos_entre, tarifa_vigente
+from .reglas import calcular_cobro, dentro_de_horario, horarios_por_dia, segundos_entre, tarifa_vigente
 from .serializers import AnulacionSerializer, EntradaSerializer, SalidaSerializer, TiqueteSerializer
 
 
@@ -109,8 +109,8 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
         if tarifa:
             cobro = calcular_cobro(tarifa, tiquete.fecha_entrada, momento, horarios)
         else:
-            minutos = minutos_entre(tiquete.fecha_entrada, momento)
-            cobro = {"minutos": minutos, "minutos_cobrados": 0, "noches": 0,
+            segundos = segundos_entre(tiquete.fecha_entrada, momento)
+            cobro = {"segundos": segundos, "minutos": segundos // 60, "minutos_cobrados": 0, "noches": 0,
                      "valor_tiempo": 0, "valor_noches": 0, "valor": 0}
         multa = int(Parqueadero.objects.get_or_create(pk=1)[0].multa_tiquete_perdido) if perdido else 0
         return {
@@ -221,6 +221,7 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
 
             tiquete.fecha_salida = ahora
             tiquete.minutos = cobro["minutos"]
+            tiquete.segundos = cobro["segundos"]
             tiquete.valor = cobro["total"]
             tiquete.multa = cobro["multa"]
             tiquete.noches = cobro["noches"]

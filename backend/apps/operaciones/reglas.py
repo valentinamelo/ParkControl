@@ -12,9 +12,23 @@ from apps.configuracion.models import Horario, Tarifa
 MINUTOS_DIA = 24 * 60
 
 
+def segundos_entre(entrada, salida):
+    """Segundos completos transcurridos (2 h 45 min 30 s -> 9930)."""
+    return max(0, int((salida - entrada).total_seconds()))
+
+
 def minutos_entre(entrada, salida):
-    """Minutos completos transcurridos (2 h 45 min 30 s -> 165)."""
-    return max(0, int((salida - entrada).total_seconds() // 60))
+    """Minutos completos transcurridos (2 h 45 min 30 s -> 165). Solo para mostrar el tiempo."""
+    return segundos_entre(entrada, salida) // 60
+
+
+def minutos_a_cobrar(segundos):
+    """
+    Cada minuto empezado cuenta: 30 s -> 1, 60 s -> 1, 61 s -> 2.
+    Así un vehículo que sale antes de completar un minuto no queda en 0 y sí se le cobra
+    (salvo que la tarifa tenga minutos de gracia).
+    """
+    return math.ceil(segundos / 60)
 
 
 def calcular_valor(tarifa, minutos):
@@ -100,24 +114,29 @@ def tiempo_en_horario(entrada, salida, horarios=None):
         if not _abierto(horarios, medianoche):
             noches += 1
         medianoche += timedelta(days=1)
-    return int(segundos // 60), noches
+    return minutos_a_cobrar(segundos), noches
 
 
 def calcular_cobro(tarifa, entrada, salida, horarios=None):
     """
     Cobro de una estadía con la tarifa dada (RF-14).
 
+    El tiempo se mide en segundos y se cobra cada minuto empezado: 59 s dentro se cobran
+    como 1 minuto (la primera hora o fracción, si no hay gracia).
+
     Si la tarifa tiene pernoctación, las horas se cobran solo dentro del horario de atención
     y cada noche con el parqueadero cerrado se cobra aparte. Si no, se cobra el tiempo corrido.
     """
-    minutos = minutos_entre(entrada, salida)
+    segundos = segundos_entre(entrada, salida)
+    minutos = segundos // 60
     if tarifa.valor_pernoctacion:
         cobrables, noches = tiempo_en_horario(entrada, salida, horarios)
     else:
-        cobrables, noches = minutos, 0
+        cobrables, noches = minutos_a_cobrar(segundos), 0
     valor_tiempo = calcular_valor(tarifa, cobrables)
     valor_noches = noches * int(tarifa.valor_pernoctacion or 0)
     return {
+        "segundos": segundos,
         "minutos": minutos,
         "minutos_cobrados": cobrables,
         "noches": noches,

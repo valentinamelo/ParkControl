@@ -13,7 +13,7 @@
   <div class="exito aviso-salida">
     <span>
       <i aria-hidden="true" class="fa-solid fa-circle-check"></i>
-      Salida de <b>{{ s.placa }}</b> registrada ({{ s.codigo }}, {{ duracion(s.minutos ?? 0) }}):
+      Salida de <b>{{ s.placa }}</b> registrada ({{ s.codigo }}, {{ tiempo(s.segundos_transcurridos ?? 0) }}):
       <b>{{ s.es_mensualidad ? 'mensualidad, sin cobro' : pesos(s.valor) }}</b>
       @if (s.metodo_pago) { · {{ s.metodo_pago }} }
       · <a class="enlace-tabla" [routerLink]="['tiquete', s.codigo]">Ver recibo</a>
@@ -48,7 +48,7 @@
             <td>{{ t.tipo_vehiculo }}</td>
             <td>{{ t.espacio }}</td>
             <td>{{ t.fecha_entrada | date: 'hh:mm a' }}</td>
-            <td><span class="badge">{{ duracion(t.minutos_transcurridos ?? 0) }}</span></td>
+            <td><span class="badge">{{ tiempo(t.segundos_transcurridos ?? 0) }}</span></td>
             <td>
               @if (t.es_mensualidad) {
                 <span class="badge badge-claro">Mensualidad</span>
@@ -83,7 +83,7 @@
             <td><b>{{ t.placa }}</b></td>
             <td>{{ t.espacio }}</td>
             <td>{{ t.fecha_salida | date: 'dd/MM hh:mm a' }}</td>
-            <td>{{ duracion(t.minutos ?? 0) }}</td>
+            <td>{{ tiempo(t.segundos_transcurridos ?? 0) }}</td>
             <td>{{ pesos(t.valor) }}</td>
             <td>{{ t.es_mensualidad ? 'Mensualidad' : (t.metodo_pago ?? '—') }}</td>
           </tr>

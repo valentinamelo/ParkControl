@@ -23,6 +23,7 @@ export interface Ocupante {
   tipo_vehiculo: string;
   fecha_entrada: string;
   minutos: number;
+  segundos: number;
   es_mensualidad: boolean;
 }
 
@@ -119,6 +120,8 @@ export const METODOS_PAGO: { valor: MetodoPago; texto: string; icono: string }[]
 /** Valor que se cobraría si el vehículo saliera ahora (lo calcula el backend). */
 export interface Cobro {
   /** Tiempo total dentro del parqueadero */
+  segundos: number;
+  /** Minutos completos (segundos // 60) */
   minutos: number;
   /** Minutos que se cobran por horas: con pernoctación, solo los del horario de atención */
   minutos_cobrados: number;
@@ -145,6 +148,8 @@ export interface Tiquete {
   fecha_salida: string | null;
   minutos: number | null;
   minutos_transcurridos: number | null;
+  /** Abierto: tiempo que lleva dentro. Cerrado: tiempo cobrado. */
+  segundos_transcurridos: number | null;
   valor: string | null;
   multa: string;
   noches: number;

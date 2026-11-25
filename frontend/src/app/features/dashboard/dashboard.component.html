@@ -92,7 +92,7 @@
               <td>{{ t.tipo_vehiculo }}</td>
               <td>{{ t.espacio }}</td>
               <td>{{ t.fecha_entrada | date: 'hh:mm a' }}</td>
-              <td><span class="badge">{{ duracion(t.minutos_transcurridos ?? 0) }}</span></td>
+              <td><span class="badge">{{ tiempo(t.segundos_transcurridos ?? 0) }}</span></td>
               <td>{{ t.es_mensualidad ? 'Mensualidad' : pesos(t.valor_actual) }}</td>
             </tr>
           } @empty {

@@ -7,7 +7,7 @@ import { EMPTY, Subject, catchError, merge, switchMap, timer } from 'rxjs';
 
 import { ApiService } from '../../core/api.service';
 import { mensajeError } from '../../core/errores';
-import { duracion, pesos } from '../../core/formato';
+import { tiempo, pesos } from '../../core/formato';
 import { Tiquete } from '../../core/models';
 
 /** Cada cuánto se actualiza la lista de vehículos dentro (la planeación pide 10–15 s). */
@@ -32,7 +32,7 @@ export class MovimientosComponent implements OnInit {
   protected ultimaSalida = signal<Tiquete | null>(
     inject(Router).currentNavigation()?.extras.state?.['salida'] ?? null,
   );
-  protected duracion = duracion;
+  protected tiempo = tiempo;
   protected pesos = pesos;
 
   protected total = computed(() => this.activos().length);

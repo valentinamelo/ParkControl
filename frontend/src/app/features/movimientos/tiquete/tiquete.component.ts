@@ -7,7 +7,7 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { mensajeError } from '../../../core/errores';
-import { duracion, pesos } from '../../../core/formato';
+import { tiempo, pesos } from '../../../core/formato';
 import { Parqueadero, Tiquete } from '../../../core/models';
 import { CodigoBarrasComponent } from '../../../shared/codigo-barras/codigo-barras.component';
 import { ModalComponent } from '../../../shared/modal/modal.component';
@@ -30,7 +30,7 @@ export class TiqueteComponent implements OnInit {
   protected tiquete = signal<Tiquete | null>(null);
   protected parqueadero = signal<Parqueadero | null>(null);
   protected error = signal('');
-  protected duracion = duracion;
+  protected tiempo = tiempo;
   protected pesos = pesos;
 
   // Anulación (solo admin, RF-24)

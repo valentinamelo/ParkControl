@@ -49,7 +49,7 @@
 
       @if (t.estado !== 'ABIERTO') {
         <div><dt>Salida</dt><dd>{{ t.fecha_salida | date: 'dd/MM/yyyy hh:mm a' }}</dd></div>
-        <div><dt>Tiempo</dt><dd>{{ duracion(t.minutos ?? 0) }}</dd></div>
+        <div><dt>Tiempo</dt><dd>{{ tiempo(t.segundos_transcurridos ?? 0) }}</dd></div>
         @if (t.noches) { <div><dt>Pernoctación</dt><dd>{{ t.noches }} {{ t.noches === 1 ? 'noche' : 'noches' }}</dd></div> }
         @if (t.multa !== '0') { <div><dt>Multa</dt><dd>{{ pesos(t.multa) }}</dd></div> }
         <div class="total"><dt>Total</dt><dd>{{ pesos(t.valor) }}</dd></div>
