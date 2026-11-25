@@ -15,7 +15,7 @@ class TiqueteSerializer(serializers.ModelSerializer):
     placa = serializers.CharField(source="vehiculo.placa", read_only=True)
     tipo_vehiculo = serializers.CharField(source="vehiculo.tipo_vehiculo.nombre", read_only=True)
     vehiculo_descripcion = serializers.SerializerMethodField()
-    espacio = serializers.CharField(source="espacio.codigo", read_only=True)
+    espacio = serializers.CharField(source="espacio_codigo", read_only=True)
     estado_display = serializers.CharField(source="get_estado_display", read_only=True)
     usuario_entrada = serializers.CharField(source="usuario_entrada.get_full_name", read_only=True)
     usuario_salida = serializers.CharField(source="usuario_salida.get_full_name", read_only=True, default=None)

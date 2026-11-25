@@ -87,9 +87,9 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
             "tipo_vehiculo_nombre": vehiculo.tipo_vehiculo.nombre,
             "marca": vehiculo.marca, "modelo": vehiculo.modelo, "color": vehiculo.color,
         }
-        abierto = vehiculo.tiquetes.filter(estado=Tiquete.Estado.ABIERTO).select_related("espacio").first()
+        abierto = vehiculo.tiquetes.filter(estado=Tiquete.Estado.ABIERTO).first()
         if abierto:
-            respuesta["tiquete_abierto"] = {"codigo": abierto.codigo, "espacio": abierto.espacio.codigo}
+            respuesta["tiquete_abierto"] = {"codigo": abierto.codigo, "espacio": abierto.espacio_codigo}
         mensualidad = mensualidad_vigente(vehiculo)
         if mensualidad:
             respuesta["mensualidad"] = {
@@ -98,6 +98,13 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
                 "espacio_fijo_id": mensualidad.espacio_fijo_id,
             }
         return Response(respuesta)
+
+    @staticmethod
+    def _liberar_espacio(tiquete):
+        """El espacio del tiquete vuelve a estar disponible (si todavía existe y estaba ocupado)."""
+        Espacio.objects.filter(pk=tiquete.espacio_id, estado=Espacio.Estado.OCUPADO).update(
+            estado=Espacio.Estado.DISPONIBLE
+        )
 
     def _cobro(self, tiquete, perdido=False, momento=None, horarios=None):
         """
@@ -206,7 +213,8 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
 
         with transaction.atomic():
             tiquete = get_object_or_404(
-                Tiquete.objects.select_for_update().select_related("vehiculo__tipo_vehiculo", "espacio"),
+                # Solo se bloquea el tiquete: PostgreSQL no bloquea el lado opcional (espacio) de un JOIN
+                Tiquete.objects.select_for_update(of=("self",)).select_related("vehiculo__tipo_vehiculo"),
                 codigo=normalizar_codigo(codigo),
             )
             if tiquete.estado != Tiquete.Estado.ABIERTO:
@@ -231,10 +239,7 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
             if cobro["total"] > 0:
                 Pago.objects.create(tiquete=tiquete, valor=cobro["total"], metodo=datos["metodo"], usuario=request.user)
 
-            espacio = tiquete.espacio
-            if espacio.estado == Espacio.Estado.OCUPADO:
-                espacio.estado = Espacio.Estado.DISPONIBLE
-                espacio.save(update_fields=["estado"])
+            self._liberar_espacio(tiquete)
             registrar(
                 request.user, "SALIDA",
                 f"{tiquete.codigo} {tiquete.vehiculo.placa} ${cobro['total']}"
@@ -258,7 +263,7 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
 
         with transaction.atomic():
             tiquete = get_object_or_404(
-                Tiquete.objects.select_for_update().select_related("vehiculo", "espacio"), codigo=normalizar_codigo(codigo)
+                Tiquete.objects.select_for_update(of=("self",)).select_related("vehiculo"), codigo=normalizar_codigo(codigo)
             )
             if tiquete.estado == Tiquete.Estado.ANULADO:
                 raise ReglaNegocio(f"El tiquete {tiquete.codigo} ya está anulado.")
@@ -268,9 +273,7 @@ class TiqueteViewSet(viewsets.ReadOnlyModelViewSet):
             if estaba_abierto:
                 tiquete.fecha_salida = timezone.now()
                 tiquete.usuario_salida = request.user
-                if tiquete.espacio.estado == Espacio.Estado.OCUPADO:
-                    tiquete.espacio.estado = Espacio.Estado.DISPONIBLE
-                    tiquete.espacio.save(update_fields=["estado"])
+                self._liberar_espacio(tiquete)
             tiquete.save()
             registrar(
                 request.user, "ANULAR_TIQUETE",

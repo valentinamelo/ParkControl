@@ -126,18 +126,38 @@ class EspaciosTests(ApiTestBase):
         self.assertFalse(Espacio.objects.filter(codigo__startswith="D-").exists())
         self.assertTrue(Bitacora.objects.filter(accion="ELIMINAR_ZONA", detalle__contains="3 espacios").exists())
 
-    def test_zona_con_movimientos_no_se_elimina_pero_si_se_desactiva(self):
+    def tiquete_cerrado_en(self, espacio, codigo="C-HISTORIA"):
+        """Un tiquete ya cerrado que usó el espacio (copia del tiquete abierto de los datos iniciales)."""
+        cerrado = Tiquete.objects.first()
+        cerrado.pk, cerrado.codigo, cerrado.espacio_codigo = None, codigo, ""
+        cerrado.estado, cerrado.espacio = Tiquete.Estado.CERRADO, espacio
+        cerrado.save()
+        return cerrado
+
+    def test_zona_con_movimientos_se_elimina_y_el_historial_se_conserva(self):
         self.como_admin()
         zona = self.zona_nueva()
-        # Un tiquete ya cerrado que usó D-01 (copia del tiquete abierto de los datos iniciales)
-        cerrado = Tiquete.objects.first()
-        cerrado.pk, cerrado.codigo = None, "C-HISTORIA"
-        cerrado.estado, cerrado.espacio = Tiquete.Estado.CERRADO, zona.espacios.get(codigo="D-01")
-        cerrado.save()
+        self.tiquete_cerrado_en(zona.espacios.get(codigo="D-01"))
         r = self.client.delete(f"/api/zonas/{zona.pk}/")
-        self.assertEqual(r.status_code, 400)
-        self.assertIn("Desactiva la zona", r.data["detail"])
-        self.assertEqual(self.client.post(f"/api/zonas/{zona.pk}/desactivar/").status_code, 200)
+        self.assertEqual(r.status_code, 204)
+        self.assertFalse(Zona.objects.filter(nombre="D").exists())
+
+        tiquete = Tiquete.objects.get(codigo="C-HISTORIA")  # el movimiento sigue registrado
+        self.assertIsNone(tiquete.espacio)
+        self.assertEqual(tiquete.espacio_codigo, "D-01")
+        self.assertEqual(self.client.get("/api/tiquetes/C-HISTORIA/").data["espacio"], "D-01")
+        self.assertTrue(Bitacora.objects.filter(accion="ELIMINAR_ZONA", detalle__contains="1 movimientos").exists())
+
+    def test_espacio_con_movimientos_se_elimina_y_el_historial_se_conserva(self):
+        self.como_admin()
+        a05 = Espacio.objects.get(codigo="A-05")
+        self.tiquete_cerrado_en(a05)
+        self.assertEqual(self.client.delete(f"/api/espacios/{a05.pk}/").status_code, 204)
+        self.assertEqual(Tiquete.objects.get(codigo="C-HISTORIA").espacio_codigo, "A-05")
+
+    def test_el_codigo_del_espacio_se_guarda_al_crear_el_tiquete(self):
+        tiquete = Tiquete.objects.select_related("espacio").first()
+        self.assertEqual(tiquete.espacio_codigo, tiquete.espacio.codigo)
 
     def test_zona_con_espacio_fijo_de_mensualidad_vigente(self):
         self.como_admin()

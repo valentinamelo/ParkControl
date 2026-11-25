@@ -115,7 +115,7 @@ Toca un espacio para **desactivarlo** (deja de ofrecerse) o **eliminarlo**. Un e
 - **Desactivar una zona** (botón 🚫): todos sus espacios dejan de ofrecerse para nuevas entradas y en el mapa aparece como *Inactiva*. Con el botón ✓ se vuelve a activar.
 - **Eliminar una zona** (botón 🗑) con todos sus espacios.
 
-Las dos cosas solo se pueden hacer si **todos los espacios de la zona están libres**: sin vehículos dentro y sin ser el espacio fijo de una mensualidad vigente. Si hay vehículos, los botones aparecen apagados; registra primero su salida. Una zona cuyos espacios ya tuvieron movimientos no se elimina, para conservar el historial: desactívala.
+Las dos cosas solo se pueden hacer si **todos los espacios de la zona están libres**: sin vehículos dentro y sin ser el espacio fijo de una mensualidad vigente. Si hay vehículos, los botones aparecen apagados; registra primero su salida. Si la zona ya tuvo movimientos, igual se puede eliminar: los tiquetes, recibos y reportes se conservan y siguen mostrando el espacio donde estuvo cada vehículo (por ejemplo, B-04).
 
 ### Anular un tiquete
 

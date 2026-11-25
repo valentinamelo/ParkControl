@@ -5,7 +5,7 @@ from .models import Pago, Tiquete
 
 @admin.register(Tiquete)
 class TiqueteAdmin(admin.ModelAdmin):
-    list_display = ["codigo", "vehiculo", "espacio", "fecha_entrada", "fecha_salida", "valor", "estado"]
+    list_display = ["codigo", "vehiculo", "espacio_codigo", "fecha_entrada", "fecha_salida", "valor", "estado"]
     list_filter = ["estado", "es_mensualidad"]
     search_fields = ["codigo", "vehiculo__placa"]
 

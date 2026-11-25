@@ -147,7 +147,7 @@ export class EspaciosComponent implements OnInit {
   }
 
   eliminar(espacio: Espacio): void {
-    if (!confirm(`¿Eliminar el espacio ${espacio.codigo}? Si solo quieres dejar de usarlo, desactívalo.`)) return;
+    if (!confirm(`¿Eliminar el espacio ${espacio.codigo}? Los movimientos que tuvo se conservan en el historial.`)) return;
     this.ejecutar(this.api.eliminarEspacio(espacio.id), `Espacio ${espacio.codigo} eliminado.`);
   }
 
@@ -178,7 +178,7 @@ export class EspaciosComponent implements OnInit {
   eliminarZona(zona: Zona): void {
     const espacios = zona.total_espacios === 1 ? 'su espacio' : `sus ${zona.total_espacios} espacios`;
     const pregunta = zona.total_espacios ? `¿Eliminar la zona ${zona.nombre} y ${espacios}?` : `¿Eliminar la zona ${zona.nombre}?`;
-    if (!confirm(`${pregunta} Si solo quieres dejar de usarla, desactívala.`)) return;
+    if (!confirm(`${pregunta} Los movimientos que tuvo se conservan en el historial.`)) return;
     if (this.seleccionado()?.zona === zona.id) this.seleccionado.set(null);
     this.ejecutar(this.api.eliminarZona(zona.id), `Zona ${zona.nombre} eliminada.`);
   }
