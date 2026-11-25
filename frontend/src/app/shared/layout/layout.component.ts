@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../../core/auth.service';
 import { Rol } from '../../core/models';
+import { NotificacionesComponent } from '../notificaciones/notificaciones.component';
 
 interface ItemMenu {
   ruta: string;
@@ -23,7 +24,7 @@ const MENU: ItemMenu[] = [
 
 @Component({
   selector: 'app-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NotificacionesComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css',
 })

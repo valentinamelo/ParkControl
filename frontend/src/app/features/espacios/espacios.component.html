@@ -10,9 +10,6 @@
 @if (error()) {
   <div class="alerta">{{ error() }}</div>
 }
-@if (aviso()) {
-  <div class="exito">{{ aviso() }}</div>
-}
 
 <div class="leyenda">
   <span><i aria-hidden="true" class="punto ocupado"></i>Ocupado</span>
@@ -20,7 +17,7 @@
   <span><i aria-hidden="true" class="punto inactivo"></i>Inactivo</span>
 </div>
 
-<div class="grid-2">
+<div class="grid-2 grid-espacios">
   <section class="card">
     @for (grupo of zonas(); track grupo.zona) {
       <h2>
@@ -84,7 +81,7 @@
         <div class="tabla-wrap">
           <table>
             <thead>
-              <tr><th>Zona</th><th>Tipo de vehículo</th><th>Espacios</th><th>Estado</th><th></th></tr>
+              <tr><th>Zona</th><th>Tipo de vehículo</th><th>Espacios</th><th></th></tr>
             </thead>
             <tbody>
               @for (z of listaZonas(); track z.id) {
@@ -97,15 +94,17 @@
                       }
                     </select>
                   </td>
-                  <td>{{ z.total_espacios }}</td>
                   <td>
-                    @if (z.espacios_ocupados) {
-                      {{ z.espacios_ocupados }} {{ z.espacios_ocupados === 1 ? 'ocupado' : 'ocupados' }}
-                    } @else if (zonaInactiva(z)) {
-                      Inactiva
-                    } @else {
-                      Libre
-                    }
+                    {{ z.total_espacios }}
+                    <small class="estado-zona" [class.con-vehiculos]="z.espacios_ocupados">
+                      @if (z.espacios_ocupados) {
+                        {{ z.espacios_ocupados }} {{ z.espacios_ocupados === 1 ? 'ocupado' : 'ocupados' }}
+                      } @else if (zonaInactiva(z)) {
+                        Inactiva
+                      } @else {
+                        Libre
+                      }
+                    </small>
                   </td>
                   <td>
                     <div class="acciones-fila">

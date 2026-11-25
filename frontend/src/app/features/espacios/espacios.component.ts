@@ -9,6 +9,7 @@ import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { erroresDeCampo, mensajeError } from '../../core/errores';
 import { tiempo } from '../../core/formato';
+import { NotificacionesService } from '../../core/notificaciones.service';
 import { Espacio, TipoVehiculo, Zona } from '../../core/models';
 import { ModalComponent } from '../../shared/modal/modal.component';
 import { INTERVALO_ACTUALIZACION } from '../movimientos/movimientos.component';
@@ -30,12 +31,12 @@ interface GrupoZona {
 export class EspaciosComponent implements OnInit {
   private api = inject(ApiService);
   private destroyRef = inject(DestroyRef);
+  private notificaciones = inject(NotificacionesService);
   protected auth = inject(AuthService);
 
   protected espacios = signal<Espacio[]>([]);
   protected seleccionado = signal<Espacio | null>(null);
   protected error = signal('');
-  protected aviso = signal('');
   protected tiempo = tiempo;
 
   // Solo para el administrador
@@ -122,7 +123,9 @@ export class EspaciosComponent implements OnInit {
         next: (creados) => {
           this.guardando.set(false);
           this.modalLote.set(false);
-          this.aviso.set(`Se crearon ${creados.length} espacios: ${creados[0].codigo} a ${creados[creados.length - 1].codigo}.`);
+          this.notificaciones.exito(
+            `Se crearon ${creados.length} espacios: ${creados[0].codigo} a ${creados[creados.length - 1].codigo}.`,
+          );
           this.cargar();
         },
         error: (e: HttpErrorResponse) => {
@@ -180,17 +183,15 @@ export class EspaciosComponent implements OnInit {
     this.ejecutar(this.api.eliminarZona(zona.id), `Zona ${zona.nombre} eliminada.`);
   }
 
-  /** Corre una acción del administrador, muestra el resultado y recarga el mapa. */
+  /** Corre una acción del administrador, muestra el resultado en una notificación y recarga el mapa. */
   private ejecutar(peticion: Observable<unknown>, exito: string): void {
-    this.error.set('');
-    this.aviso.set('');
     peticion.subscribe({
       next: () => {
-        this.aviso.set(exito);
+        this.notificaciones.exito(exito);
         this.cargar();
       },
       error: (e: HttpErrorResponse) => {
-        this.error.set(mensajeError(e));
+        this.notificaciones.error(mensajeError(e));
         this.cargar();  // por si el select quedó con un valor que no se guardó
       },
     });
